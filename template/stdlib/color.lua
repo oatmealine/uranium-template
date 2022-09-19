@@ -284,6 +284,7 @@ end
 --- smoother hsv. not correct but looks nicer
 ---@return color
 function shsv(h, s, v, a)
+  h = h % 1
   return hsv(h * h * (3 - 2 * h), s, v, a)
 end
 
