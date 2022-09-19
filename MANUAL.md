@@ -64,6 +64,12 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`color:grayscale(): color`](#colorgrayscale-color)
     - [`color:hueshift(a: number): color`](#colorhueshifta-number-color)
     - [Operations](#operations-1)
+  - [`easable`](#easable)
+    - [`easable(default: number): easable`](#easabledefault-number-easable)
+    - [`easable:set(new: number): void`](#easablesetnew-number-void)
+    - [`easable:add(new: number): void`](#easableaddnew-number-void)
+    - [`easable:reset(new: number): void`](#easableresetnew-number-void)
+    - [Operations](#operations-2)
   - [`input`](#input)
     - [A note about keyboard inputs](#a-note-about-keyboard-inputs)
   - [`bitop`](#bitop)
@@ -77,6 +83,8 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`rng:next(): number`](#rngnext-number)
     - [`rng:jump(): void`](#rngjump-void)
     - [`rng:longJump(): void`](#rnglongjump-void)
+  - [`ease`](#ease)
+  - [`util`](#util)
   - [`uwuify`](#uwuify)
 - [Examples](#examples)
   - [Default Uranium Template code](#default-uranium-template-code)
@@ -421,6 +429,49 @@ Here are all valid operations for colors:
 - `color / color`: divides the colors' R, G and B values, respectively, forming a new color
 - `color == color`: checks if the two colors' R, G and B values are equivalent; returns false with any other type
 
+### `easable`
+
+A simple way of making a number easable. See [this post](https://blog.oat.zone/the-easy-and-memorable-solution-to-easing/) for implementation details.
+
+```lua
+local n = easable(0)
+
+-- each time you want to set it, call this instead
+n:set(value)
+-- or
+n:add(value)
+
+-- to avoid the ease, do this instead
+n:reset(value)
+
+-- then, in your update function
+function uranium.update(dt)
+  n(dt) -- multiply this image by some value to speed it up
+  print(n.a) -- retrieve the eased value
+  print(n.toa) -- retrieve the target value it's easing towards
+end
+```
+
+#### `easable(default: number): easable`
+
+Creates a new easable, setting the default to `default`. Can technically be anything that has `T * number`, `number - T` and `T + T` defined, including a `vector2D`.
+
+#### `easable:set(new: number): void`
+
+Sets the target value (`toa`) to `new`, easing the current value to the new value.
+
+#### `easable:add(new: number): void`
+
+Equivalent to `easable:add(easable.toa + new)`.
+
+#### `easable:reset(new: number): void`
+
+Sets the current (`a`) and target (`toa`) values to `new`, **not** easing the current value to the new value.
+
+#### Operations
+
+Every operation supported on the eased value is supported with an `easable`.
+
 ### `input`
 
 `input` is the library that handles everything input-related. Its main feature is providing the `press` and `release` callbacks, but you can also access the raw inputs with the `inputs` table (each value is `-1` if the key is not pressed and the time at which it was pressed, estimated with `t` if it is pressed) and the _raw_ inputs (ignoring callback returns) with `rawInputs`. Additionally, for your convinience, it provides a `directions` enum:
@@ -505,6 +556,16 @@ The long-jump function:
 > 2^96 calls to next(); it can be used to generate 2^32 starting points,
 > from each of which jump() will generate 2^32 non-overlapping
 > subsequences for parallel distributed computations.
+
+### `ease`
+
+A direct copy of [Mirin Template's `ease.lua`](https://github.com/XeroOl/notitg-mirin/blob/master/template/ease.lua), for convinience. See the docs for those [**here**](https://xerool.github.io/notitg-mirin/docs/eases.html).
+
+### `util`
+
+A big ol' module that holds a bunch of useful functions. These were too specific or too niche to go in any singular module; so they're all here now.
+
+There's _a bit too many_ functions to document, so I'd recommend just looking through the source code. I promise it doesn't bite.
 
 ### `uwuify`
 
