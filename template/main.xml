@@ -75,18 +75,55 @@
     self:hidden(1)
   end
 
+  local actorsInitialized = false -- if true, no new actors can be created
+
   local luaobj
 
   local globalQueue = {} -- for resetting
+
+  local patchedFunctions = {}
   local function patchFunction(f, obj)
-    return function(...)
-      arg[1] = obj
-      return f(unpack(arg))
+    if not patchedFunctions[f] then patchedFunctions[f] = {} end
+    if not patchedFunctions[f][obj] then
+      patchedFunctions[f][obj] = function(...)
+        arg[1] = obj
+        local results
+        local status, result = pcall(function()
+          -- doing it this way instead of returning because lua
+          -- offers no way of grabbing everything BUT the first
+          -- argument out of pcall
+          results = {f(unpack(arg))}
+        end)
+        if not status then
+          error(result, 2)
+        else
+          return unpack(results)
+        end
+      end
     end
+    return patchedFunctions[f][obj]
   end
 
   local function onCommand(self)
+    actorsInitialized = true
     uranium:call('init')
+  end
+
+  function reset(actor)
+    if not actorsInitialized then error('uranium: cannot reset an actor during initialization', 2) end
+    for _, q in ipairs(globalQueue) do
+      local queueActor = q[1]
+      if queueActor == actor.__raw then
+        local v = q[2]
+
+        local func = queueActor[v[1]]
+        if not func then
+          -- uhmmm ??? hm. what do we do??
+        else
+          patchFunction(func, queueActor)(unpack(v[2]))
+        end
+      end
+    end
   end
 
   -- runs once during ScreenReadyCommand, before the user code is loaded
@@ -297,24 +334,28 @@
   end
 
   function oat._actor.initFrame(self)
-    self:SetDrawFunction(function() end)
+    local nextChild = self(2)
+    self:SetDrawFunction(function()
+      if nextChild then
+        nextChild:Draw()
+      end
+    end)
   end
 
   local function createProxyActor(name)
     local queue = {}
     local initCommands = {}
     local lockedActor
-    local patchedFunctions = {}
 
     return setmetatable({}, {
       __index = function(self, key)
+        if key == '__raw' then
+          return lockedActor
+        end
         if lockedActor then
           local val = lockedActor[key]
           if type(val) == 'function' then
-            if not patchedFunctions[val] then
-              patchedFunctions[val] = patchFunction(val, lockedActor)
-            end
-            return patchedFunctions[val]
+            return patchFunction(val, lockedActor)
           end
           return val
         end
@@ -380,6 +421,7 @@
 
   local function createGenericFunc(type)
     return function()
+      if actorsInitialized then error('uranium: cannot create an actor during runtime!!', 2) end
       local actor = createProxyActor(type)
       table.insert(actorQueue, {
         type = type,
@@ -397,6 +439,7 @@
   Polygon = createGenericFunc('Polygon')
 
   function Sprite(file)
+    if actorsInitialized then error('uranium: cannot create an actor during runtime!!', 2) end
     if not file then error('uranium: cannot create a Sprite without a file', 2) end
     local actor = createProxyActor('Sprite')
     table.insert(actorQueue, {
@@ -410,6 +453,7 @@
   end
 
   function Model(file)
+    if actorsInitialized then error('uranium: cannot create an actor during runtime!!', 2) end
     if not file then error('uranium: cannot create a Model without a file', 2) end
     local actor = createProxyActor('Model')
     table.insert(actorQueue, {
@@ -423,6 +467,7 @@
   end
 
   function BitmapText(font, text)
+    if actorsInitialized then error('uranium: cannot create an actor during runtime!!', 2) end
     local actor = createProxyActor('BitmapText')
     table.insert(actorQueue, {
       type = 'BitmapText',
@@ -436,6 +481,7 @@
   end
 
   function ActorSound(file)
+    if actorsInitialized then error('uranium: cannot create an actor during runtime!!', 2) end
     if not file then error('uranium: cannot create an ActorSound without a file', 2) end
     local actor = createProxyActor('ActorSound')
     table.insert(actorQueue, {

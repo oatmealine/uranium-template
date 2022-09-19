@@ -33,6 +33,10 @@ function BitmapText(font, text) end
 --- Defines an ActorSound actor.
 function ActorSound(file) end
 
+---@param actor Actor
+--- Resets an actor to its initial state
+function reset(actor) end
+
 ---@type number
 --- A simple timer. Ticks upwards at a rate of 1/sec.
 ---
