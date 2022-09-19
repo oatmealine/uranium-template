@@ -35,7 +35,9 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`uranium.press(direction: string)`](#uraniumpressdirection-string)
     - [`uranium.release(direction: string)`](#uraniumreleasedirection-string)
   - [Custom callbacks](#custom-callbacks)
+- [Requiring files](#requiring-files)
 - [Standard library](#standard-library)
+  - [Importing modules](#importing-modules)
   - [`vector2D`](#vector2d)
     - [`vector2D(x: number | nil, y: number | nil): vector2D`](#vector2dx-number--nil-y-number--nil-vector2d)
     - [`vectorFromAngle(ang: number | nil, amp: number | nil): vector2D`](#vectorfromangleang-number--nil-amp-number--nil-vector2d)
@@ -77,10 +79,10 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [A note about keyboard inputs](#a-note-about-keyboard-inputs)
   - [`bitop`](#bitop)
   - [`scheduler`](#scheduler)
-    - [`schedule(when: number, func: function): number`](#schedulewhen-number-func-function-number)
-    - [`scheduleInTicks(when: number, func: function): number`](#scheduleintickswhen-number-func-function-number)
-    - [`unschedule(i: index): void`](#unschedulei-index-void)
-    - [`unscheduleInTicks(i: index): void`](#unscheduleinticksi-index-void)
+    - [`scheduler.schedule(when: number, func: function): number`](#schedulerschedulewhen-number-func-function-number)
+    - [`scheduler.scheduleInTicks(when: number, func: function): number`](#schedulerscheduleintickswhen-number-func-function-number)
+    - [`scheduler.unschedule(i: index): void`](#schedulerunschedulei-index-void)
+    - [`scheduler.unscheduleInTicks(i: index): void`](#schedulerunscheduleinticksi-index-void)
   - [`rng`](#rng)
     - [`rng.init(seed: number[] | nil): rng`](#rnginitseed-number--nil-rng)
     - [`rng(a: number | nil, b: number | nil): number`](#rnga-number--nil-b-number--nil-number)
@@ -93,6 +95,7 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`rng:longJump(): void`](#rnglongjump-void)
   - [`ease`](#ease)
   - [`util`](#util)
+  - [`aft`](#aft)
   - [`uwuify`](#uwuify)
 - [Examples](#examples)
   - [Default Uranium Template code](#default-uranium-template-code)
@@ -131,8 +134,8 @@ Afterwards, it should be safe to zip everything up and send it over!
 
 - [Define some actors](#defining-actors), and [call initialization methods on those actors](#initializing-actors) to set them up
 - [Define callbacks](#callback-usage), such as the [update](#uraniumupdatedt-number) callback
-- Require more files in! Splitting your code into neat little modules is always good practice.
-- Make use of the expansive standard library, like the vector or color classes
+- [Require more files in](#requiring-files)! Splitting your code into neat little modules is always good practice.
+- Make use of the expansive [standard library](#standard-library), like the [vector](#vector2d) or [color](#color) classes
 
 If you're still a bit clueless, why not check out the [Examples](#examples) section?
 
@@ -145,6 +148,8 @@ local quad = Quad()
 local sprite = Sprite('file/location.png')
 local text = BitmapText('common', 'hello, world!')
 ```
+
+All actors that take in filenames have their filenames starting from the root of the project; meaning if you had a file in `myModFile/src/test.png`, you'd have to pass in a filename of `src/test.png`. **If an image is blank, or a single pink pixel, it hasn't loaded properly.**
 
 ### Initializing actors
 
@@ -289,11 +294,53 @@ uranium:call('somethingHappened', extra, values, go, here)
 
 Callbacks support as many extra values as Lua supports arguments in a function - so let's just say you won't be running out of them any time soon.
 
+## Requiring files
+
+`require` in Uranium works a lot like Lua's vanilla `require`, and is a direct copy of Mirin's `require`.
+
+Say you have a file structure like this:
+
+`src/main.lua`
+```lua
+local value = require('test')
+print(value)
+```
+
+`src/test.lua`
+```lua
+return 'hello!'
+```
+
+Your setup would print `'hello!'`.
+
+All [standard library](#standard-library) modules are required with `require`, see further notes in [**Importing modules**](#importing-modules).
+
 ## Standard library
 
 The Uranium Template standard library is split up into a few convinient modules. This section aims to comprehensively document them all.
 
+### Importing modules
+
+You can import a module like so:
+
+```lua
+require('stdlib.vector2D')
+
+-- can use vector() here
+```
+
+Some modules won't export any globals, and therefore need to be loaded like so:
+
+```lua
+uwuify = require('stdlib.uwuify')
+print(uwuify('hello!'))
+```
+
+These modules have a label near their header in this manual reading _"Exports globals"_.
+
 ### `vector2D`
+
+_Exports globals_
 
 `vector2D` is a simple 2D vector class system. For example, to define a vector:
 ```lua
@@ -390,6 +437,8 @@ Here are all valid operations for vectors:
 - `-vector2D`: negates the X and Y coordinates of the vector
 
 ### `color`
+
+_Exports globals_
 
 `color` is a simple wrapper around all things color-related.
 
@@ -488,6 +537,8 @@ Here are all valid operations for colors:
 A simple way of making a number easable. See [this post](https://blog.oat.zone/the-easy-and-memorable-solution-to-easing/) for implementation details.
 
 ```lua
+local easable = require('stdlib.easable')
+
 local n = easable(0)
 
 -- each time you want to set it, call this instead
@@ -528,6 +579,8 @@ Every operation supported on the eased value is supported with an `easable`.
 
 ### `input`
 
+_Defines callbacks_
+
 `input` is the library that handles everything input-related. Its main feature is providing the `press` and `release` callbacks, but you can also access the raw inputs with the `inputs` table (each value is `-1` if the key is not pressed and the time at which it was pressed, estimated with `t` if it is pressed) and the _raw_ inputs (ignoring callback returns) with `rawInputs`. Additionally, for your convinience, it provides a `directions` enum:
 ```lua
 directions = {
@@ -562,23 +615,33 @@ local isDebugKeyAndShiftHeld = isDebugKeyHeld and special.shift
 
 A Lua 5.0 port of [bitop-lua](https://github.com/AlberTajuelo/bitop-lua). See their repository for documentation.
 
+```lua
+local bitop = require('stdlib.bitop')
+```
+
 ### `scheduler`
+
+_Defines callbacks_
 
 A simple scheduler.
 
-#### `schedule(when: number, func: function): number`
+```lua
+local scheduler = require('stdlib.scheduler')
+```
+
+#### `scheduler.schedule(when: number, func: function): number`
 
 Schedules a function to run in a specific amount of time. `when` is in seconds.
 
-#### `scheduleInTicks(when: number, func: function): number`
+#### `scheduler.scheduleInTicks(when: number, func: function): number`
 
 Schedules a function to run in a specific amount of `uranium.update` calls/ticks.
 
-#### `unschedule(i: index): void`
+#### `scheduler.unschedule(i: index): void`
 
 Unschedules a function. Use the index returned to you when originally scheduling the function.
 
-#### `unscheduleInTicks(i: index): void`
+#### `scheduler.unscheduleInTicks(i: index): void`
 
 Unschedules a function in ticks. Use the index returned to you when originally scheduling the function.
 
@@ -633,17 +696,40 @@ The long-jump function:
 
 ### `ease`
 
+_Exports globals_
+
 A direct copy of [Mirin Template's `ease.lua`](https://github.com/XeroOl/notitg-mirin/blob/master/template/ease.lua), for convinience. See the docs for those [**here**](https://xerool.github.io/notitg-mirin/docs/eases.html).
 
 ### `util`
+
+_Exports globals_
 
 A big ol' module that holds a bunch of useful functions. These were too specific or too niche to go in any singular module; so they're all here now.
 
 There's _a bit too many_ functions to document, so I'd recommend just looking through the source code. I promise it doesn't bite.
 
+### `aft`
+
+An AFT setup library. Sets up sprites and AFTs with `sprite` and `aft`, respectively, making them ready for texturing use.
+
+```lua
+local aftSetup = require('stdlib.aft')
+
+local aft = ActorFrameTexture()
+
+local aftSprite = Sprite()
+aftSetup.sprite(aftSprite)
+
+aft:addcommand('Init', function(self)
+  aftSetup.aft(aft) -- put this here; else it'll recreate it every frame!
+  aftSprite:SetTexture(self:GetTexture())
+end)
+```
+
 ### `uwuify`
 
 ```lua
+uwuify = require('stdlib.uwuify')
 print(uwuify('hello, world!')) --> hewwo, wowwd!
 ```
 
@@ -655,6 +741,8 @@ Here are a couple of examples. All of these are standalone `main.lua` files that
 
 ### Default Uranium Template code
 ```lua
+require('stdlib.color')
+
 -- define a basic quad
 local quad = Quad()
 quad:xy(scx, scy)
@@ -663,7 +751,7 @@ quad:diffuse(0.8, 1, 0.7, 1)
 quad:skewx(0.2)
 
 -- define a sprite
-local sprite = Sprite('../docs/uranium.png')
+local sprite = Sprite('docs/uranium.png')
 sprite:xy(scx, scy)
 sprite:zoom(0.4)
 sprite:glow(1, 1, 1, 0)
@@ -707,6 +795,9 @@ end
 
 ### Simple platformer base
 ```lua
+require('stdlib.vector2D')
+local input = require('stdlib.input')
+
 -- constants are just those that felt nice to me. this is completely valid to do in gamedev
 local DAMPING = 1/9500
 local SPEED = 2
@@ -721,6 +812,10 @@ protagActor:zoomto(PLAYER_SIZE, PLAYER_SIZE)
 local ground = Quad()
 ground:zoomto(sw, 4)
 ground:xy(scx, groundY + PLAYER_SIZE/2 + 4/2)
+
+local coverQuad = Quad()
+coverQuad:diffuse(0, 0, 0, 0.6)
+coverQuad:xywh(scx, scy, sw, sh)
 
 local pos = vector(scx, groundY)
 local vel = vector(0, 0)
@@ -737,10 +832,10 @@ end
 
 function uranium.update(dt)
   -- respond to l/r inputs
-  if inputs.Left ~= -1 then
+  if input.inputs.Left ~= -1 then
     vel.x = vel.x - SPEED
   end
-  if inputs.Right ~= -1 then
+  if input.inputs.Right ~= -1 then
     vel.x = vel.x + SPEED
   end
 
@@ -762,6 +857,9 @@ function uranium.update(dt)
   pos.x = math.min(pos.x, sw - PLAYER_SIZE/2)
   pos.x = math.max(pos.x, 0  + PLAYER_SIZE/2)
 
+  -- slightly cover up the regular nitg gameplay
+  coverQuad:Draw()
+
   -- draw them!
   protagActor:xy(pos.x, pos.y)
   protagActor:Draw()
@@ -776,6 +874,10 @@ end
 _VSync recommended_
 
 ```lua
+local aftSetup = require('stdlib.aft')
+require('stdlib.color')
+require('stdlib.vector2D')
+
 local coverQuad = Quad()
 coverQuad:diffuse(0, 0, 0, 1)
 coverQuad:xywh(scx, scy, sw, sh)
@@ -786,13 +888,13 @@ testQuad:zoom(50)
 local aft = ActorFrameTexture()
 
 local aftSprite = Sprite()
-oat.sprite(aftSprite)
+aftSetup.sprite(aftSprite)
 aftSprite:diffusealpha(0.99)
 aftSprite:zoom(1.01)
 aftSprite:rotationz(0.2)
 
 aft:addcommand('Init', function(self)
-  oat.aft(aft) -- put this here; else it'll recreate it every frame!
+  aftSetup.aft(aft) -- put this here; else it'll recreate it every frame!
   aftSprite:SetTexture(self:GetTexture())
 end)
 
@@ -819,7 +921,7 @@ end
 
 ## Credits
 
-**XeroOl** - Mirin Template was a massive design inspiration; early stages of this template borrowed lots of code from it<br>
+**XeroOl** - Mirin Template was a massive design inspiration; early stages of this template borrowed lots of code from it and the current `require` implementation has been grabbed directly from it<br>
 **Mayflower**, **Aura** - Testing, design help<br>
 **mangoafterdawn** - The Uranium Template logo!<br>
 
