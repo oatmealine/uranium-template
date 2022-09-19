@@ -463,7 +463,7 @@ A xoshiro128** reimplementation in Lua.
 
 #### `rng.init(seed: number[] | nil): rng`
 
-Initializes a new RNG class. `seed` must be a table of size 4; if it is not provided, `os.time()` is used in its place.
+Initializes a new RNG class. `seed` must be a table of size 4; if it is not provided, `os.time()` is used in its place. _(Not `os.clock()`!!! Two RNG values created at the same time with no provided seed will be the same.)_
 
 #### `rng(a: number | nil, b: number | nil): number`
 
@@ -523,7 +523,7 @@ Here are a couple of examples. All of these are standalone `main.lua` files that
 -- define a basic quad
 local quad = Quad()
 quad:xy(scx, scy)
-quad:zoomto(120, 120)
+quad:zoom(120)
 quad:diffuse(0.8, 1, 0.7, 1)
 quad:skewx(0.2)
 
@@ -531,6 +531,7 @@ quad:skewx(0.2)
 local sprite = Sprite('../docs/uranium.png')
 sprite:xy(scx, scy)
 sprite:zoom(0.4)
+sprite:glow(1, 1, 1, 0)
 
 -- let's add some text aswell
 local text = BitmapText('common', 'hello, uranium template!')
@@ -552,10 +553,17 @@ function uranium.update(dt)
   -- no need to reset properties - uranium resets all properties that you set upon definition!
 
   -- throw in the logo aswell, because why not
+  -- zoom and glow is done for a quick-and-dirty outline
+  sprite:zoom(sprite:GetZoom() * 1.1)
+  sprite:glow(1, 1, 1, 1)
+  sprite:Draw()
+  -- if you can't wait until the start of a frame to reset properties, you can manually do it
+  reset(sprite)
   sprite:Draw()
 
   -- for the text, get a rainbow color
-  local col = rgb(1, 0.4, 0.4):huesmooth(t * 0.6)
+  local col = shsv(t * 0.6, 0.5, 1)
+  print(col)
   text:diffuse(col:unpack()) -- the :unpack() is necessary when passing into :diffuse()
   -- wag the text
   text:rotationz(math.sin(t * 2) * 10)

@@ -1,7 +1,7 @@
 -- define a basic quad
 local quad = Quad()
 quad:xy(scx, scy)
-quad:zoomto(120, 120)
+quad:zoom(120)
 quad:diffuse(0.8, 1, 0.7, 1)
 quad:skewx(0.2)
 
@@ -9,6 +9,7 @@ quad:skewx(0.2)
 local sprite = Sprite('../docs/uranium.png')
 sprite:xy(scx, scy)
 sprite:zoom(0.4)
+sprite:glow(1, 1, 1, 0)
 
 -- let's add some text aswell
 local text = BitmapText('common', 'hello, uranium template!')
@@ -30,10 +31,16 @@ function uranium.update(dt)
   -- no need to reset properties - uranium resets all properties that you set upon definition!
 
   -- throw in the logo aswell, because why not
+  sprite:zoom(sprite:GetZoom() * 1.1)
+  sprite:glow(1, 1, 1, 1)
+  sprite:Draw()
+  -- if you can't wait until the start of a frame to reset properties, you can manually do it
+  reset(sprite)
   sprite:Draw()
 
   -- for the text, get a rainbow color
-  local col = rgb(1, 0.4, 0.4):huesmooth(t * 0.6)
+  local col = shsv(t * 0.6, 0.5, 1)
+  print(col)
   text:diffuse(col:unpack()) -- the :unpack() is necessary when passing into :diffuse()
   -- wag the text
   text:rotationz(math.sin(t * 2) * 10)

@@ -12,7 +12,7 @@
 #CDTITLE:;
 #MUSIC:silence.ogg;
 #OFFSET:0.000;
-#SAMPLESTART:0.000;
+#SAMPLESTART:472.930;
 #SAMPLELENGTH:12.000;
 #SELECTABLE:YES;
 #BPMS:0.000=100.000;
@@ -26,7 +26,7 @@
 
 #KEYSOUNDS:;
 
-//---------------dance-single - ----------------
+//---------------dance-single - Medium----------------
 #NOTES:
      dance-single:
      Medium:
@@ -2008,3 +2008,4 @@ M000
 00M0
 000M
 ;
+
