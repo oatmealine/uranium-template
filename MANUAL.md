@@ -32,6 +32,8 @@ Uranium Template originally formed during the creation of a currently unreleased
   - [Default callbacks](#default-callbacks)
     - [`uranium.update(dt: number)`](#uraniumupdatedt-number)
     - [`uranium.init()`](#uraniuminit)
+    - [`uranium.ready()`](#uraniumready)
+    - [`uranium.exit()`](#uraniumexit)
   - [Custom callbacks](#custom-callbacks)
 - [Requiring files](#requiring-files)
 - [Standard library](#standard-library)
@@ -271,6 +273,12 @@ Called every frame. `dt` is the time passed since the last frame, the "deltatime
 
 #### `uranium.init()`
 Called once on `OnCommand`. Every actor has been created, and the game should be starting shortly.
+
+#### `uranium.ready()`
+Fired on the first tick. A later version of `init()` where more things should be safe to use.
+
+#### `uranium.exit()`
+_Should_ call when the player exits the file. **Not properly tested yet.**
 
 ### Custom callbacks
 
