@@ -25,6 +25,9 @@ Uranium Template originally formed during the creation of a currently unreleased
 - [How do I start writing code?](#how-do-i-start-writing-code)
 - [Defining actors](#defining-actors)
   - [Initializing actors](#initializing-actors)
+  - [Actor-specific notes](#actor-specific-notes)
+    - [`ActorFrameTexture`](#actorframetexture)
+    - [`ActorFrame`, `ActorScroller`](#actorframe-actorscroller)
 - [Callback usage](#callback-usage)
   - [Default callbacks](#default-callbacks)
     - [`uranium.update(dt: number)`](#uraniumupdatedt-number)
@@ -89,6 +92,7 @@ Uranium Template originally formed during the creation of a currently unreleased
 - [Examples](#examples)
   - [Default Uranium Template code](#default-uranium-template-code)
   - [Simple platformer base](#simple-platformer-base)
+  - [AFTs](#afts)
 - [Credits](#credits)
 
 ## Testimonies
@@ -186,6 +190,51 @@ sprite:addcommand('Init', function(self)
   someTexture = self:GetTexture()
 end)
 ```
+
+### Actor-specific notes
+
+#### `ActorFrameTexture`
+
+AFTs work in the same way as usual AFTs do in terms of ordering: they capture everything that was drawn to the screen before them:
+
+```lua
+quad:Draw() -- will be drawn to the AFT
+
+aft:Draw()
+
+sprite:Draw() -- will not be drawn to the AFT
+```
+
+See [the AFT example](#afts) for a quick setup to play around with. The ability to dynamically adjust at which point in the stack they render makes them _a lot_ more powerful than you'd expect.
+
+#### `ActorFrame`, `ActorScroller`
+
+Due to Uranium Template's recursive actor loader, these are impossible to implement in a meaningful way. Actors are loaded in a manner like so:
+
+```lua
+local actor1 = Quad()
+local actor2 = Sprite()
+local actor3 = BitmapText()
+```
+
+```xml
+<Layer Type="ActorFrame"/>
+<children>
+  <Layer Type="Quad"/>
+  <Layer Type="ActorFrame"/>
+  <children>
+    <Layer Type="Sprite"/>
+    <Layer Type="ActorFrame"/>
+    <children>
+      <Layer Type="BitmapText"/>
+    </children>
+  </children>
+</children>
+```
+
+This is a technical limitation; NotITG does not allow loading a dynamic amount of arbitrary actors defined via Lua in any way other than this (as far as I know). Meaning, if you defined an `ActorFrame` or `ActorScroller`, you would not be able to add anything to its' children.
+
+However, if you're looking to do what `ActorFrame` does, the standard library `transform` module can handle that for you! (NYI)
 
 ## Callback usage
 
@@ -624,7 +673,6 @@ function uranium.update(dt)
 
   -- for the text, get a rainbow color
   local col = shsv(t * 0.6, 0.5, 1)
-  print(col)
   text:diffuse(col:unpack()) -- the :unpack() is necessary when passing into :diffuse()
   -- wag the text
   text:rotationz(math.sin(t * 2) * 10)
@@ -695,6 +743,52 @@ function uranium.update(dt)
 
   -- draw the ground
   ground:Draw()
+end
+```
+
+### AFTs
+
+_VSync recommended_
+
+```lua
+local coverQuad = Quad()
+coverQuad:diffuse(0, 0, 0, 1)
+coverQuad:xywh(scx, scy, sw, sh)
+
+local testQuad = Quad()
+testQuad:zoom(50)
+
+local aft = ActorFrameTexture()
+
+local aftSprite = Sprite()
+oat.sprite(aftSprite)
+aftSprite:diffusealpha(0.99)
+aftSprite:zoom(1.01)
+aftSprite:rotationz(0.2)
+
+aft:addcommand('Init', function(self)
+  oat.aft(aft) -- put this here; else it'll recreate it every frame!
+  aftSprite:SetTexture(self:GetTexture())
+end)
+
+local text = BitmapText('common', 'uranium template!')
+text:xy(scx, scy)
+
+function uranium.update(dt)
+  coverQuad:Draw()
+
+  aftSprite:Draw()
+
+  local rainbow = shsv(t * 1.2, 0.5, 1)
+
+  testQuad:xy((vectorFromAngle(t * 160, 100) + vector(scx, scy)):unpack())
+  testQuad:diffuse(rainbow:unpack())
+  testQuad:zoom(50 * math.random())
+  testQuad:Draw()
+
+  aft:Draw()
+
+  text:Draw()
 end
 ```
 

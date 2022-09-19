@@ -31,6 +31,7 @@ function uranium.update(dt)
   -- no need to reset properties - uranium resets all properties that you set upon definition!
 
   -- throw in the logo aswell, because why not
+  -- zoom and glow is done for a quick-and-dirty outline
   sprite:zoom(sprite:GetZoom() * 1.1)
   sprite:glow(1, 1, 1, 1)
   sprite:Draw()
@@ -40,7 +41,6 @@ function uranium.update(dt)
 
   -- for the text, get a rainbow color
   local col = shsv(t * 0.6, 0.5, 1)
-  print(col)
   text:diffuse(col:unpack()) -- the :unpack() is necessary when passing into :diffuse()
   -- wag the text
   text:rotationz(math.sin(t * 2) * 10)
