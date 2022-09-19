@@ -7,4 +7,4 @@
   <br>
 </center>
 
-#### Please see [MANUAL.md](MANUAL.md) for the manual!
+#### Please see [MANUAL.md](MANUAL.md) for the manual, and [uranium-core](https://git.oat.zone/oat/uranium-core) for the template code itself
