@@ -215,7 +215,7 @@ aft:Draw()
 sprite:Draw() -- will not be drawn to the AFT
 ```
 
-See [the AFT example](#afts) for a quick setup to play around with. The ability to dynamically adjust at which point in the stack they render makes them _a lot_ more powerful than you'd expect.
+See [the AFT example](#afts) for a quick setup to play around with, or the example in the [aft library](#aft) for a barebones setup. The ability to dynamically adjust at which point in the stack they render makes them _a lot_ more powerful than you'd expect.
 
 #### `ActorFrame`, `ActorScroller`
 
