@@ -76,6 +76,11 @@ Uranium Template originally formed during the creation of a currently unreleased
   - [`input`](#input)
     - [A note about keyboard inputs](#a-note-about-keyboard-inputs)
   - [`bitop`](#bitop)
+  - [`scheduler`](#scheduler)
+    - [`schedule(when: number, func: function): number`](#schedulewhen-number-func-function-number)
+    - [`scheduleInTicks(when: number, func: function): number`](#scheduleintickswhen-number-func-function-number)
+    - [`unschedule(i: index): void`](#unschedulei-index-void)
+    - [`unscheduleInTicks(i: index): void`](#unscheduleinticksi-index-void)
   - [`rng`](#rng)
     - [`rng.init(seed: number[] | nil): rng`](#rnginitseed-number--nil-rng)
     - [`rng(a: number | nil, b: number | nil): number`](#rnga-number--nil-b-number--nil-number)
@@ -556,6 +561,26 @@ local isDebugKeyAndShiftHeld = isDebugKeyHeld and special.shift
 ### `bitop`
 
 A Lua 5.0 port of [bitop-lua](https://github.com/AlberTajuelo/bitop-lua). See their repository for documentation.
+
+### `scheduler`
+
+A simple scheduler.
+
+#### `schedule(when: number, func: function): number`
+
+Schedules a function to run in a specific amount of time. `when` is in seconds.
+
+#### `scheduleInTicks(when: number, func: function): number`
+
+Schedules a function to run in a specific amount of `uranium.update` calls/ticks.
+
+#### `unschedule(i: index): void`
+
+Unschedules a function. Use the index returned to you when originally scheduling the function.
+
+#### `unscheduleInTicks(i: index): void`
+
+Unschedules a function in ticks. Use the index returned to you when originally scheduling the function.
 
 ### `rng`
 
