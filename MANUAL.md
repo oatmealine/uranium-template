@@ -99,6 +99,7 @@ Uranium Template originally formed during the creation of a currently unreleased
   - [`noautplay`](#noautplay)
   - [`uwuify`](#uwuify)
 - [Examples](#examples)
+  - [The obligatory](#the-obligatory)
   - [Default Uranium Template code](#default-uranium-template-code)
   - [Simple platformer base](#simple-platformer-base)
   - [AFTs](#afts)
@@ -747,6 +748,16 @@ _A very important library I don't see enough game engines include in their stand
 ## Examples
 
 Here are a couple of examples. All of these are standalone `main.lua` files that you can plug in and view the results of!
+
+### The obligatory
+```lua
+local text = BitmapText('common', 'Hello, world!')
+text:xy(scx, scy)
+
+function uranium.update()
+  text:Draw()
+end
+```
 
 ### Default Uranium Template code
 ```lua
