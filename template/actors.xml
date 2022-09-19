@@ -1,0 +1,6 @@
+<ActorFrame InitCommand="%oat._actor.initFrame">
+  <children>
+    <Layer Condition="oat._actor.cond()" Type="@oat._actor.type()" File="@oat._actor.file()" Font="@oat._actor.font()" InitCommand="%oat._actor.init"/>
+    <Layer Condition="oat._actor.next()" File="actors.xml" />
+  </children>
+</ActorFrame>

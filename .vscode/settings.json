@@ -1,0 +1,6 @@
+{
+  "Lua.runtime.path": [
+    "?.lua"
+  ],
+  "Lua.runtime.version": "Lua 5.1"
+}
