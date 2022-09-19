@@ -99,6 +99,7 @@ Uranium Template originally formed during the creation of a currently unreleased
   - [`util`](#util)
   - [`aft`](#aft)
   - [`noautplay`](#noautplay)
+  - [`eternalfile`](#eternalfile)
   - [`uwuify`](#uwuify)
 - [Examples](#examples)
   - [The obligatory](#the-obligatory)
@@ -742,6 +743,14 @@ A single function which can be called before `uranium.ready()` to disable autopl
 
 ```lua
 require('stdlib.noautoplay')()
+```
+
+### `eternalfile`
+
+A single function which turns your file into an eternal, neverending file, until the player puts it out of its misery by exiting. The current beat will always go from 0 to 1 and start over once this is enabled.
+
+```lua
+require('stdlib.eternalfile')()
 ```
 
 ### `uwuify`
