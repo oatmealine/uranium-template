@@ -32,8 +32,6 @@ Uranium Template originally formed during the creation of a currently unreleased
   - [Default callbacks](#default-callbacks)
     - [`uranium.update(dt: number)`](#uraniumupdatedt-number)
     - [`uranium.init()`](#uraniuminit)
-    - [`uranium.press(direction: string)`](#uraniumpressdirection-string)
-    - [`uranium.release(direction: string)`](#uraniumreleasedirection-string)
   - [Custom callbacks](#custom-callbacks)
 - [Requiring files](#requiring-files)
 - [Standard library](#standard-library)
@@ -76,6 +74,8 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`easable:reset(new: number): void`](#easableresetnew-number-void)
     - [Operations](#operations-2)
   - [`input`](#input)
+    - [`uranium.press(direction: string)`](#uraniumpressdirection-string)
+    - [`uranium.release(direction: string)`](#uraniumreleasedirection-string)
     - [A note about keyboard inputs](#a-note-about-keyboard-inputs)
   - [`bitop`](#bitop)
   - [`scheduler`](#scheduler)
@@ -96,6 +96,7 @@ Uranium Template originally formed during the creation of a currently unreleased
   - [`ease`](#ease)
   - [`util`](#util)
   - [`aft`](#aft)
+  - [`noautplay`](#noautplay)
   - [`uwuify`](#uwuify)
 - [Examples](#examples)
   - [Default Uranium Template code](#default-uranium-template-code)
@@ -269,12 +270,6 @@ Called every frame. `dt` is the time passed since the last frame, the "deltatime
 
 #### `uranium.init()`
 Called once on `OnCommand`. Every actor has been created, and the game should be starting shortly.
-
-#### `uranium.press(direction: string)`
-Called when the player presses on a certain key. **Currently only supports arrow keys!!** `direction` can be `Left`, `Down`, `Up` or `Right` (TODO: change this to an enum).
-
-#### `uranium.release(direction: string)`
-Same as [`uranium.press`](#uraniumpressdirection-string), except for releasing a key.
 
 ### Custom callbacks
 
@@ -591,6 +586,12 @@ directions = {
 }
 ```
 
+#### `uranium.press(direction: string)`
+Called when the player presses on a certain key. **Currently only supports arrow keys!!** `direction` can be `Left`, `Down`, `Up` or `Right` (TODO: change this to an enum).
+
+#### `uranium.release(direction: string)`
+Same as [`uranium.press`](#uraniumpressdirection-string), except for releasing a key.
+
 #### A note about keyboard inputs
 
 Working with left/down/up/right inputs can be tiring at times and it's hard to always fit designs to work with them. However, if you're willing to take a little compromise, you can also _access all keyboard inputs_. However, it's worth noting that this **depends on NotITG's Simply Love** (any forks will work fine too) both for your development environment and for all players. That being said, if you want to access the keyboard API, this is how you do it:
@@ -724,6 +725,14 @@ aft:addcommand('Init', function(self)
   aftSetup.aft(aft) -- put this here; else it'll recreate it every frame!
   aftSprite:SetTexture(self:GetTexture())
 end)
+```
+
+### `noautplay`
+
+A single function which can be called before `uranium.ready()` to disable autoplay for the duration of the file if the player has it on.
+
+```lua
+require('stdlib.noautoplay')()
 ```
 
 ### `uwuify`
