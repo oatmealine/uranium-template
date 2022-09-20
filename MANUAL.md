@@ -6,7 +6,7 @@ If you're viewing this in VSCode, it's recommended that you open it in a preview
 
 <br>
 
-<center id="start">
+<center>
   <h2 style="font-size: 42px">
     <img src="docs/uranium.png" height="42px" alt="">
     <b>Uranium Template</b> <em>α</em>
