@@ -35,6 +35,7 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`uranium.init()`](#uraniuminit)
     - [`uranium.ready()`](#uraniumready)
     - [`uranium.exit()`](#uraniumexit)
+    - [`uranium.focus(hasFocus: boolean)`](#uraniumfocushasfocus-boolean)
   - [Custom callbacks](#custom-callbacks)
 - [Requiring files](#requiring-files)
 - [Standard library](#standard-library)
@@ -336,6 +337,9 @@ Fired on the first tick. A later version of `init()` where more things should be
 
 #### `uranium.exit()`
 _Should_ call when the player exits the file. **Not properly tested yet.**
+
+#### `uranium.focus(hasFocus: boolean)`
+Called whenever the window loses/gains focus. You can use this to reduce render quality on alt-tab.
 
 ### Custom callbacks
 
