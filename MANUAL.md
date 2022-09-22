@@ -94,6 +94,14 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`scheduler.unschedule(i: index): void`](#schedulerunschedulei-index-void)
     - [`scheduler.unscheduleInTicks(i: index): void`](#schedulerunscheduleinticksi-index-void)
   - [`binser`](#binser)
+  - [`savedata`](#savedata)
+    - [`savedata.initializeModule(name: string, forceIgnore: boolean): void`](#savedatainitializemodulename-string-forceignore-boolean-void)
+      - [Generating a savedata name](#generating-a-savedata-name)
+    - [`savedata.s(data: table, name: string | nil): void`](#savedatasdata-table-name-string--nil-void)
+    - [`savedata.save(instant: boolean): void`](#savedatasaveinstant-boolean-void)
+    - [`savedata.load(): void`](#savedataload-void)
+    - [`savedata.getLastSave(): string[] | nil`](#savedatagetlastsave-string--nil)
+    - [`savedata.enableAutosave(): void`](#savedataenableautosave-void)
   - [`rng`](#rng)
     - [`rng.init(seed: number[] | nil): rng`](#rnginitseed-number--nil-rng)
     - [`rng(a: number | nil, b: number | nil): number`](#rnga-number--nil-b-number--nil-number)
@@ -116,6 +124,7 @@ Uranium Template originally formed during the creation of a currently unreleased
   - [Simple platformer base](#simple-platformer-base)
   - [AFTs](#afts)
   - [Shader test](#shader-test)
+  - [Savedata example](#savedata-example)
 - [Credits](#credits)
 
 ## Testimonies
@@ -791,7 +800,7 @@ Unschedules a function in ticks. Use the index returned to you when originally s
 
 ### `binser`
 
-A NITG port of [binser](https://github.com/bakpakin/binser). Used for savedata serialization.
+A NITG port of [binser](https://github.com/bakpakin/binser). Used for [savedata](#savedata) serialization.
 
 ```lua
 local binser = require('stdlib.binser')
@@ -803,6 +812,64 @@ print(binser.deserializeN(mydata, 3))
 ```
 
 If you want to serialize custom types using the savedata module, check binser's [Custom types](https://github.com/bakpakin/binser#custom-types) section.
+
+### `savedata`
+
+_Defines callbacks_
+
+A complete library for saving and loading arbitrary data to the user's profile. Uses [binser](#binser) for serialization. See [Savedata example](#savedata-example) for an example of how to use this library.
+
+#### `savedata.initializeModule(name: string, forceIgnore: boolean): void`
+
+Initializes the savedata module. `forceIgnore` makes the function ignore name checks, **but please don't use it unless you know what you're doing!!!**
+
+##### Generating a savedata name
+
+Ideally, you'd generate a savedata name by [generating a random 16-character string](https://www.random.org/strings/?num=1&len=16&digits=on&upperalpha=on&loweralpha=on&unique=on&format=plain&rnd=new) and appending it to your game's name. For instance:
+
+```lua
+savedata.initializeModule('myGameName_doAmaUOBIjiaSWyz')
+```
+
+The reason this is done is to avoid name collision - all modfiles share a global profile namespace to put their saved data in. To prevent it as much as possible, I've decided to force the user to generate a unique name that _most likely_ won't be taken by anything else. `forceIgnore` completely ignores the 16-character and special/normal character checks.
+
+#### `savedata.s(data: table, name: string | nil): void`
+
+Creates a new module in your savedata. It uses `data` for defaults, then uses it for writing savedata to it and reading savedata from it; for instance, this would be correct usage:
+
+```lua
+local counter = {
+  n = 0
+}
+
+savedata.s(counter)
+
+function uranium.init()
+  print(counter.n) --> could be different from 0!
+end
+
+function uranium.update()
+  counter.n = counter.n + 1 -- this will be saved the next time savedata.save is called
+end
+```
+
+By default, the name that's used for your module will be the folder your Lua file is located in, followed by its filename. **This means you should not rely on the automatic name generation if your Lua file rests at the root of your file or if you're calling this function via `loadstring` or similar** as it will create unpredictable module names that will change between setups and sometimes even game restarts. You can pass in any string you like to `name`, as long as it's unique in your project, to override this behavior.
+
+#### `savedata.save(instant: boolean): void`
+
+Saves the savedata onto the user's profile. It waits a single tick to do so and sets the boolean `saveNextFrame` to `true`; this is so that your game can display a loading frame for the temporary lagspike, as chances are, on lower-end setups with hard drives, this will momentarily freeze the game as it writes the profile. You can make it instantly save with `instant`.
+
+#### `savedata.load(): void`
+
+Loads the savedata. _Shouldn't be called manually; this is automatically called on [`uranium.init()`](#uraniuminit)._
+
+#### `savedata.getLastSave(): string[] | nil`
+
+Gets the last save time that persists between game restarts in the format `{hour, minute, date, month, year}`. If the game has not saved once, returns `nil`.
+
+#### `savedata.enableAutosave(): void`
+
+Enables autosave via [`uranium.exit()`](#uraniumexit). Should hopefully mean data should never get lost.
 
 ### `rng`
 
@@ -1181,6 +1248,49 @@ function uranium.update()
   reset(sprite)
   shader:uniform1f('yo', 0)
   sprite:Draw()
+end
+```
+
+### Savedata example
+
+```lua
+local input = require('stdlib.input')
+local savedata = require('stdlib.savedata')
+
+savedata.initializeModule('example_tTsrDBMgsA5eWzaZ') -- change this!!
+
+local save = {
+  leftPresses = 0,
+  rightPresses = 0,
+}
+
+savedata.s(save)
+
+local text = BitmapText('common', '')
+text:xy(scx, scy)
+
+function uranium.press(key)
+  if key == input.inputType.Left then
+    save.leftPresses = save.leftPresses + 1
+  elseif key == input.inputType.Right then
+    save.rightPresses = save.rightPresses + 1
+  elseif key == input.inputType.Down then
+    savedata.save()
+  end
+end
+
+function uranium.update(dt)
+  text:settext(
+    'left presses: ' .. save.leftPresses .. '\n' ..
+    'right presses: ' .. save.rightPresses
+  )
+  text:Draw()
+
+  if savedata.saveNextFrame then
+    text:xy(scx, scy + 50)
+    text:settext('saving!')
+    text:Draw()
+  end
 end
 ```
 
