@@ -93,6 +93,7 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`scheduler.scheduleInTicks(when: number, func: function): number`](#schedulerscheduleintickswhen-number-func-function-number)
     - [`scheduler.unschedule(i: index): void`](#schedulerunschedulei-index-void)
     - [`scheduler.unscheduleInTicks(i: index): void`](#schedulerunscheduleinticksi-index-void)
+  - [`binser`](#binser)
   - [`rng`](#rng)
     - [`rng.init(seed: number[] | nil): rng`](#rnginitseed-number--nil-rng)
     - [`rng(a: number | nil, b: number | nil): number`](#rnga-number--nil-b-number--nil-number)
@@ -787,6 +788,21 @@ Unschedules a function. Use the index returned to you when originally scheduling
 #### `scheduler.unscheduleInTicks(i: index): void`
 
 Unschedules a function in ticks. Use the index returned to you when originally scheduling the function.
+
+### `binser`
+
+A NITG port of [binser](https://github.com/bakpakin/binser). Used for savedata serialization.
+
+```lua
+local binser = require('stdlib.binser')
+
+local mydata = binser.serialize(45, {4, 8, 12, 16}, 'Hello, World!')
+
+print(binser.deserializeN(mydata, 3))
+-- 45	table: 0x7fa60054bdb0	Hello, World!
+```
+
+If you want to serialize custom types using the savedata module, check binser's [Custom types](https://github.com/bakpakin/binser#custom-types) section.
 
 ### `rng`
 
