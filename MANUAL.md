@@ -28,6 +28,7 @@ Uranium Template originally formed during the creation of a currently unreleased
   - [Actor-specific notes](#actor-specific-notes)
     - [`ActorFrameTexture`](#actorframetexture)
     - [`ActorFrame`, `ActorScroller`](#actorframe-actorscroller)
+  - [Shaders](#shaders)
 - [Callback usage](#callback-usage)
   - [Default callbacks](#default-callbacks)
     - [`uranium.update(dt: number)`](#uraniumupdatedt-number)
@@ -106,6 +107,7 @@ Uranium Template originally formed during the creation of a currently unreleased
   - [Default Uranium Template code](#default-uranium-template-code)
   - [Simple platformer base](#simple-platformer-base)
   - [AFTs](#afts)
+  - [Shader test](#shader-test)
 - [Credits](#credits)
 
 ## Testimonies
@@ -250,6 +252,54 @@ local actor3 = BitmapText()
 This is a technical limitation; NotITG does not allow loading a dynamic amount of arbitrary actors defined via Lua in any way other than this (as far as I know). Meaning, if you defined an `ActorFrame` or `ActorScroller`, you would not be able to add anything to its' children.
 
 However, if you're looking to do what `ActorFrame` does, the standard library `transform` module can handle that for you! (NYI)
+
+### Shaders
+
+Shaders cannot be manually defined on actors [due to a technical limitation](https://discord.com/channels/227650173256466432/666629297544495124/1022119161415077909); plus, it wouldn't make much sense to integrate them in the same way that NotITG integrates shaders with the current XML behavior. In order to give an actor a shader, you need to define them seperately:
+
+```lua
+local sprite = Sprite('docs/uranium.png')
+local shader = Shader('src/shader.frag') -- returns a RageShaderProgram
+```
+
+Afterwards, call `SetShader` on your actor. **Use `__raw` on the shader, else it'll pass in the proxy object and break!!!**
+
+```lua
+function uranium.init()
+  sprite:SetShader(shader.__raw)
+end
+```
+
+If you prefer, you can also inline shader code, as long as you don't mix files with inlined code in the same shader:
+
+```lua
+local shader = Shader([[
+  #version 120
+
+  void main() {
+    gl_FragColor = vec4(0.420, 0.69, 1.0, 1.0);
+  }
+]])
+```
+
+Defining vertex shaders is done the same way, except with the second argument instead:
+
+```lua
+local shader = Shader('src/shader.frag', 'src/shader.vert')
+```
+
+To define a vertex shader and nothing else, you'll need to omit the fragment shader and put a `nil` in its place:
+
+```lua
+local shader = Shader(nil, 'src/shader.vert')
+```
+
+And last, if you want a no-op shader, you can just do a simple:
+```lua
+local noopShader = Shader()
+```
+
+Check [the shader example](#shader-test) if you just want something to play around with.
 
 ## Callback usage
 
@@ -953,6 +1003,86 @@ function uranium.update(dt)
   aft:Draw()
 
   text:Draw()
+end
+```
+
+### Shader test
+
+```lua
+-- define a sprite
+local sprite = Sprite('docs/uranium.png')
+sprite:xy(scx, scy)
+sprite:zoom(0.4)
+sprite:rotationz(0)
+sprite:diffusealpha(1)
+
+-- add our heat shader
+local shader = Shader([[
+#version 120
+
+// took the common heat.frag and integrated simplex noise into it
+// now it looks better -oat
+
+uniform float tx,ty,yo;
+uniform float scale;
+
+varying vec2 textureCoord;
+varying vec4 color;
+uniform sampler2D sampler0;
+
+vec2 hash( vec2 p ) // replace this by something better
+{
+	p = vec2( dot(p,vec2(127.1,311.7)), dot(p,vec2(269.5,183.3)) );
+	return -1.0 + 2.0*fract(sin(p)*43758.5453123);
+}
+
+float noise( in vec2 p )
+{
+  const float K1 = 0.366025404; // (sqrt(3)-1)/2;
+  const float K2 = 0.211324865; // (3-sqrt(3))/6;
+
+	vec2  i = floor( p + (p.x+p.y)*K1 );
+  vec2  a = p - i + (i.x+i.y)*K2;
+  float m = step(a.y,a.x); 
+  vec2  o = vec2(m,1.0-m);
+  vec2  b = a - o + K2;
+	vec2  c = a - 1.0 + 2.0*K2;
+  vec3  h = max( 0.5-vec3(dot(a,a), dot(b,b), dot(c,c) ), 0.0 );
+	vec3  n = h*h*h*vec3( dot(a,hash(i+0.0)), dot(b,hash(i+o)), dot(c,hash(i+1.0)));
+  return dot( n, vec3(70.0) );
+}
+
+vec2 SineWave(vec2 p) {
+  // wave distortion
+  float x = noise(vec2(p.x * scale, p.y * scale) * 30.5 + tx) * 0.05 * yo;
+  float y = noise(vec2(-p.y * scale, p.x * scale) * 29.3 - ty) * 0.05 * yo;
+  return vec2(p.x+x, p.y+y);
+}
+
+void main() {
+  vec4 col = texture2D(sampler0, SineWave(textureCoord));
+
+  gl_FragColor = col * color;
+}
+]])
+shader:uniform1f('yo', 1)
+shader:uniform1f('scale', 0.25)
+
+function uranium.init()
+  sprite:SetShader(shader.__raw) -- important!!!! we need __raw, else it'll pass in the proxy and error silently
+end
+
+function uranium.update()
+  shader:uniform1f('tx', t)
+  shader:uniform1f('ty', t)
+
+  sprite:zoom(0.8)
+  sprite:diffusealpha(0.6)
+  sprite:Draw()
+
+  reset(sprite)
+  shader:uniform1f('yo', 0)
+  sprite:Draw()
 end
 ```
 
