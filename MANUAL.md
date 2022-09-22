@@ -77,8 +77,14 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`easable:reset(new: number): void`](#easableresetnew-number-void)
     - [Operations](#operations-2)
   - [`input`](#input)
-    - [`uranium.press(direction: string)`](#uraniumpressdirection-string)
-    - [`uranium.release(direction: string)`](#uraniumreleasedirection-string)
+    - [`input.inputType`](#inputinputtype)
+    - [`input.directions`](#inputdirections)
+    - [`input.getInputName(i: inputType): string`](#inputgetinputnamei-inputtype-string)
+    - [`input.keyboardEquivalent`](#inputkeyboardequivalent)
+    - [`input.getInput(i: string): number`](#inputgetinputi-string-number)
+    - [`input.isDown(i: string): number`](#inputisdowni-string-number)
+    - [`uranium.press(input: inputType)`](#uraniumpressinput-inputtype)
+    - [`uranium.release(input: inputType)`](#uraniumreleaseinput-inputtype)
     - [A note about keyboard inputs](#a-note-about-keyboard-inputs)
   - [`bitop`](#bitop)
   - [`scheduler`](#scheduler)
@@ -636,21 +642,93 @@ Every operation supported on the eased value is supported with an `easable`.
 
 _Defines callbacks_
 
-`input` is the library that handles everything input-related. Its main feature is providing the `press` and `release` callbacks, but you can also access the raw inputs with the `inputs` table (each value is `-1` if the key is not pressed and the time at which it was pressed, estimated with `t` if it is pressed) and the _raw_ inputs (ignoring callback returns) with `rawInputs`. Additionally, for your convinience, it provides a `directions` enum:
+`input` is the library that handles everything input-related. Its main feature is providing the `press` and `release` callbacks, but you can also access the raw inputs with the `inputs` table (each value is `-1` if the key is not pressed and the time at which it was pressed, estimated with `t` if it is pressed) and the _raw_ inputs (ignoring callback returns) with `rawInputs`.
+
+#### `input.inputType`
+
+The `input` module can detect every input that the game can pass through the [`StepP<player><input><action>MessageCommand`](https://craftedcart.gitlab.io/notitg_docs/message_commands.html#stepp-player-input-action-messagecommand). This list is:
+```
+MenuLeft
+MenuRight
+MenuUp
+MenuDown
+Start
+Select
+Back
+Coin
+Operator
+Left
+Right
+Up
+Down
+UpLeft
+UpRight
+ActionLeft
+ActionRight
+ActionUp
+ActionDown
+Action1
+Action2
+Action3
+Action4
+Action5
+Action6
+Action7
+Action8
+MenuStart
+```
+
+All of these inputs are neatly stored away in an enum called `inputType`. For instance, if you wanted to check if an input was `Start`, you would do:
+
 ```lua
-directions = {
-  Left = {-1, 0},
-  Down = {0, 1},
-  Up = {0, -1},
-  Right = {1, 0}
+local isStart = i == input.inputType.Start
+```
+
+#### `input.directions`
+
+For your convinience, cardinal inputs are given a simple directions enum:
+```lua
+self.directions = {
+  [self.inputType.Left] = {-1, 0},
+  [self.inputType.Down] = {0, 1},
+  [self.inputType.Up] = {0, -1},
+  [self.inputType.Right] = {1, 0}
 }
 ```
 
-#### `uranium.press(direction: string)`
-Called when the player presses on a certain key. **Currently only supports arrow keys!!** `direction` can be `Left`, `Down`, `Up` or `Right` (TODO: change this to an enum).
+#### `input.getInputName(i: inputType): string`
 
-#### `uranium.release(direction: string)`
-Same as [`uranium.press`](#uraniumpressdirection-string), except for releasing a key.
+Gets the name of an input. The reverse of indexing the `inputType` enum.
+
+#### `input.keyboardEquivalent`
+
+Mappings for the default keybinds for most keys. It's recommended to put them alongside the in-game representation in UIs to avoid confusion:
+
+```lua
+local inputName = input.getInputName(i)
+local keyboardInput = input.keyboardEquivalent[i]
+if keyboardInput then
+  inputName = inputName .. ' (defaults to ' .. keyboardInput .. ')'
+end
+local dialog = 'Press ' .. inputName .. ' to boop' --> 'Press Start (defaults to Enter) to boop'
+```
+
+#### `input.getInput(i: string): number`
+
+Shorthand for accessing `input.inputs` directly.
+```lua
+input.inputs[input.inputType.Left] == input.getInput('Left')
+```
+
+#### `input.isDown(i: string): number`
+
+Shorthand for `input.getInput(i) ~= -1`.
+
+#### `uranium.press(input: inputType)`
+Called when the player presses on a certain key.
+
+#### `uranium.release(input: inputType)`
+Same as [`uranium.press`](#uraniumpressinput-inputtype), except for releasing a key.
 
 #### A note about keyboard inputs
 
@@ -909,8 +987,8 @@ local vel = vector(0, 0)
 local hasHitGround = true -- let's define this so that you can't jump mid-air
 
 -- called whenever the player recieves an input
-function uranium.press(direction)
-  if direction == 'Up' and hasHitGround then
+function uranium.press(i)
+  if i == input.inputType.Up and hasHitGround then
     vel.y = vel.y - JUMP_FORCE
     hasHitGround = false
     return true -- input eaten! further callbacks won't recieve this
@@ -919,10 +997,10 @@ end
 
 function uranium.update(dt)
   -- respond to l/r inputs
-  if input.inputs.Left ~= -1 then
+  if input.isDown('Left') then
     vel.x = vel.x - SPEED
   end
-  if input.inputs.Right ~= -1 then
+  if input.isDown('Right') then
     vel.x = vel.x + SPEED
   end
 
