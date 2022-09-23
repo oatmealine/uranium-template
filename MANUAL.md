@@ -102,6 +102,9 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`savedata.load(): void`](#savedataload-void)
     - [`savedata.getLastSave(): string[] | nil`](#savedatagetlastsave-string--nil)
     - [`savedata.enableAutosave(): void`](#savedataenableautosave-void)
+  - [`env`](#env)
+    - [`env.inEditor: boolean`](#envineditor-boolean)
+    - [`env.onWine: boolean`](#envonwine-boolean)
   - [`rng`](#rng)
     - [`rng.init(seed: number[] | nil): rng`](#rnginitseed-number--nil-rng)
     - [`rng(a: number | nil, b: number | nil): number`](#rnga-number--nil-b-number--nil-number)
@@ -870,6 +873,18 @@ Gets the last save time that persists between game restarts in the format `{hour
 #### `savedata.enableAutosave(): void`
 
 Enables autosave via [`uranium.exit()`](#uraniumexit). Should hopefully mean data should never get lost.
+
+### `env`
+
+Small module that contains a bit of information about the user's environment.
+
+#### `env.inEditor: boolean`
+
+Is `true` if the file is being played in the editor. Useful for debugging stuff.
+
+#### `env.onWine: boolean`
+
+Is `true` if the player is playing NotITG through Wine or similar.
 
 ### `rng`
 
