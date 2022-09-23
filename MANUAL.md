@@ -46,6 +46,7 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`vector2D:length(): number`](#vector2dlength-number)
     - [`vector2D:lengthSquared(): number`](#vector2dlengthsquared-number)
     - [`vector2D:angle(): number`](#vector2dangle-number)
+    - [`vector2D:rotate(ang: number): vector2D`](#vector2drotateang-number-vector2d)
     - [`vector2D:normalize(): vector2D`](#vector2dnormalize-vector2d)
     - [`vector2D:resize(length: number): vector2D`](#vector2dresizelength-number-vector2d)
     - [`vector2D:unpack(): number, number`](#vector2dunpack-number-number)
@@ -473,7 +474,11 @@ Returns the vector's length, squared. Here mainly for optimization purposes; thi
 
 #### `vector2D:angle(): number`
 
-Returns the vector's angle in radians. <!--(TODO: why?)-->
+Returns the vector's angle in degrees.
+
+#### `vector2D:rotate(ang: number): vector2D`
+
+Rotates the vector, setting its angle but keeping its length. _Angle is provided in degrees._
 
 #### `vector2D:normalize(): vector2D`
 
