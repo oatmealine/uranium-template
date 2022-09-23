@@ -66,7 +66,7 @@ And it has many features you've come to expect from your favorite templates:
 
 Oh, and did I mention there's an [uwuification library](MANUAL.md#uwuify)?
 
-And if you're still not convinced, here's a couple testimonials from our dear users:
+And if you're still not convinced, here's a couple of testimonials from our dear users:
 
 - "this template really adds some spice to your modfiles. think industrial glitter in your next chilli!" _- Mayflower_
 - "a good template that i have definitely used! jill can i go now. jill please i just want to see my family" _- Aura_
