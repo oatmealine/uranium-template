@@ -19,7 +19,6 @@ If you're viewing this in VSCode, it's recommended that you open it in a preview
 
 Uranium Template originally formed during the creation of a currently unreleased project, and since then I've went ahead and refined and polished it up to be usable on its own. Most of the design decisions came from experience using prototype versions of it!
 
-- [Testimonies](#testimonies)
 - [Installation](#installation)
 - [Distribution](#distribution)
 - [How do I start writing code?](#how-do-i-start-writing-code)
@@ -134,11 +133,6 @@ Uranium Template originally formed during the creation of a currently unreleased
   - [Savedata example](#savedata-example)
   - [Simple ActorFrame setup](#simple-actorframe-setup)
 - [Credits](#credits)
-
-## Testimonies
-
-- "this template really adds some spice to your modfiles. think industrial glitter in your next chilli!" _- Mayflower_
-- "a good template that i have definitely used! jill can i go now. jill please i just want to see my family" _- Aura_
 
 ## Installation
 
