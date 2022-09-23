@@ -27,7 +27,8 @@ Uranium Template originally formed during the creation of a currently unreleased
   - [Initializing actors](#initializing-actors)
   - [Actor-specific notes](#actor-specific-notes)
     - [`ActorFrameTexture`](#actorframetexture)
-    - [`ActorFrame`, `ActorScroller`](#actorframe-actorscroller)
+    - [`ActorFrame`](#actorframe)
+    - [`ActorScroller`](#actorscroller)
   - [Shaders](#shaders)
 - [Callback usage](#callback-usage)
   - [Default callbacks](#default-callbacks)
@@ -129,6 +130,7 @@ Uranium Template originally formed during the creation of a currently unreleased
   - [AFTs](#afts)
   - [Shader test](#shader-test)
   - [Savedata example](#savedata-example)
+  - [Simple ActorFrame setup](#simple-actorframe-setup)
 - [Credits](#credits)
 
 ## Testimonies
@@ -245,34 +247,41 @@ sprite:Draw() -- will not be drawn to the AFT
 
 See [the AFT example](#afts) for a quick setup to play around with, or the example in the [aft library](#aft) for a barebones setup. The ability to dynamically adjust at which point in the stack they render makes them _a lot_ more powerful than you'd expect.
 
-#### `ActorFrame`, `ActorScroller`
+#### `ActorFrame`
 
-Due to Uranium Template's recursive actor loader, these are impossible to implement in a meaningful way. Actors are loaded in a manner like so:
+To create an `ActorFrame`, first define it as a proper actor:
 
 ```lua
-local actor1 = Quad()
-local actor2 = Sprite()
-local actor3 = BitmapText()
+local af = ActorFrame()
 ```
 
-```xml
-<Layer Type="ActorFrame"/>
-<children>
-  <Layer Type="Quad"/>
-  <Layer Type="ActorFrame"/>
-  <children>
-    <Layer Type="Sprite"/>
-    <Layer Type="ActorFrame"/>
-    <children>
-      <Layer Type="BitmapText"/>
-    </children>
-  </children>
-</children>
+Then, for all children that you want to put into the `ActorFrame`, run `addChild`:
+
+```lua
+local quad = Quad()
+addChild(af, quad)
+local sprite = Sprite()
+addChild(af, sprite)
 ```
 
-This is a technical limitation; NotITG does not allow loading a dynamic amount of arbitrary actors defined via Lua in any way other than this (as far as I know). Meaning, if you defined an `ActorFrame` or `ActorScroller`, you would not be able to add anything to its' children.
+**This will mess up rendering for those actors!** This is because all actors that are outside the _root_ `ActorFrame` of the template would be unaffected with the frame's transformations if they're drawn outside of their respective DrawFunctions. You'd want to then create a setup similar to this:
 
-However, if you're looking to do what `ActorFrame` does, the standard library `transform` module can handle that for you! (NYI)
+```lua
+setDrawFunction(af, function() -- necessary to call this instead of af.SetDrawFunction for template internals reasons
+  quad:Draw()
+  sprite:Draw()
+end)
+
+function uranium.update()
+  af:Draw() -- would draw quad and sprite
+end
+```
+
+**Nested AFs are supported.** As with all complicated things in this template, check out the [`ActorFrame` example](#simple-actorframe-setup) for a simple working setup.
+
+#### `ActorScroller`
+
+`ActorFrame` already has an extremely, _extremely_ complicated setup powering it in the back-end; and `ActorScroller` is way too niche for me to give it the same treatment. Sorry!
 
 ### Shaders
 
@@ -974,7 +983,7 @@ end)
 
 ### `noautplay`
 
-A single function which can be called before `uranium.ready()` to disable autoplay for the duration of the file if the player has it on.
+A single function which can be called before `uranium.ready()` to disable autoplay for the duration of the file if the player has it on. ***Not tested.***
 
 ```lua
 require('stdlib.noautoplay')()
@@ -1311,6 +1320,61 @@ function uranium.update(dt)
     text:settext('saving!')
     text:Draw()
   end
+end
+```
+
+### Simple ActorFrame setup
+
+```lua
+local af = ActorFrame()
+af:xy(scx, scy)
+
+local sprite = Sprite('docs/uranium.png')
+addChild(af, sprite)
+sprite:zoom(0.4)
+sprite:glow(1, 1, 1, 0)
+
+local quadsAF = ActorFrame()
+addChild(af, quadsAF)
+
+local quads = {}
+for i = 1, 50 do
+  local q = Quad()
+  q:zoom(math.random(30, 50))
+  q:xy(math.random(-200, 200), math.random(-200, 200))
+  q:diffusealpha(0.7)
+  q:rotationx(math.random(0, 360))
+  q:rotationy(math.random(0, 360))
+  q:rotationz(math.random(0, 360))
+  table.insert(quads, q)
+  addChild(quadsAF, q)
+end
+
+setDrawFunction(quadsAF, function()
+  for _, v in ipairs(quads) do
+    v:Draw()
+  end
+
+  quadsAF:rotationz(-t * 30)
+end)
+
+setDrawFunction(af, function()
+  quadsAF:Draw()
+
+  af:rotationz(t * 90)
+  af:zoom(1 + math.sin(t) * 0.2)
+
+  sprite:xy(math.cos(t) * 100, math.sin(t) * 100)
+
+  sprite:zoom(sprite:GetZoom() * 1.1)
+  sprite:glow(1, 1, 1, 1)
+  sprite:Draw()
+  reset(sprite)
+  sprite:Draw()
+end)
+
+function uranium.update()
+  af:Draw()
 end
 ```
 
