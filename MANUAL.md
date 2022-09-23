@@ -96,6 +96,8 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`scheduler.unschedule(i: index): void`](#schedulerunschedulei-index-void)
     - [`scheduler.unscheduleInTicks(i: index): void`](#schedulerunscheduleinticksi-index-void)
   - [`binser`](#binser)
+  - [`mirin`](#mirin)
+    - [A note about `reset`](#a-note-about-reset)
   - [`savedata`](#savedata)
     - [`savedata.initializeModule(name: string, forceIgnore: boolean): void`](#savedatainitializemodulename-string-forceignore-boolean-void)
       - [Generating a savedata name](#generating-a-savedata-name)
@@ -829,6 +831,18 @@ print(binser.deserializeN(mydata, 3))
 ```
 
 If you want to serialize custom types using the savedata module, check binser's [Custom types](https://github.com/bakpakin/binser#custom-types) section.
+
+### `mirin`
+
+_Defines callbacks_
+
+_Exports globals_
+
+A copy of the [Mirin Template by XeroOl](https://github.com/XeroOl/notitg-mirin/) (currently at 5.0.1), shoved in and ported for your convinience. Works exactly the same as regular Mirin.
+
+#### A note about `reset`
+
+Both Uranium Template and Mirin Template contain the global `reset` - Mirin Template uses it for mod resetting, while Uranium Template uses it for actor resetting. To avoid this collision, Uranium's `reset` has an alias called `resetActor`; Mirin will, by default, overwrite the usual `reset`. There's currently no way to change this.
 
 ### `savedata`
 
