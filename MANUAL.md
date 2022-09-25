@@ -83,10 +83,10 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`input.directions`](#inputdirections)
     - [`input.getInputName(i: inputType): string`](#inputgetinputnamei-inputtype-string)
     - [`input.keyboardEquivalent`](#inputkeyboardequivalent)
-    - [`input.getInput(i: string): number`](#inputgetinputi-string-number)
-    - [`input.isDown(i: string): number`](#inputisdowni-string-number)
-    - [`uranium.press(input: inputType)`](#uraniumpressinput-inputtype)
-    - [`uranium.release(input: inputType)`](#uraniumreleaseinput-inputtype)
+    - [`input.getInput(i: string, pn: number | nil): number`](#inputgetinputi-string-pn-number--nil-number)
+    - [`input.isDown(i: string, pn: number | nil): number`](#inputisdowni-string-pn-number--nil-number)
+    - [`uranium.press(input: inputType, pn: number)`](#uraniumpressinput-inputtype-pn-number)
+    - [`uranium.release(input: inputType, pn: number)`](#uraniumreleaseinput-inputtype-pn-number)
     - [A note about keyboard inputs](#a-note-about-keyboard-inputs)
   - [`bitop`](#bitop)
   - [`scheduler`](#scheduler)
@@ -740,21 +740,21 @@ end
 local dialog = 'Press ' .. inputName .. ' to boop' --> 'Press Start (defaults to Enter) to boop'
 ```
 
-#### `input.getInput(i: string): number`
+#### `input.getInput(i: string, pn: number | nil): number`
 
-Shorthand for accessing `input.inputs` directly.
+Shorthand for accessing `input.inputs` directly. If `pn` is not provided, it gets either of the players' inputs, prioritizing any that are held down.
 ```lua
-input.inputs[input.inputType.Left] == input.getInput('Left')
+input.inputs[1][input.inputType.Left] == input.getInput('Left', 1)
 ```
 
-#### `input.isDown(i: string): number`
+#### `input.isDown(i: string, pn: number | nil): number`
 
-Shorthand for `input.getInput(i) ~= -1`.
+Shorthand for `input.getInput(i, pn) ~= -1`. If `pn` is not provided, players are ignored and it checks if either of the players have the input held down
 
-#### `uranium.press(input: inputType)`
-Called when the player presses on a certain key.
+#### `uranium.press(input: inputType, pn: number)`
+Called when a player presses on a certain key.
 
-#### `uranium.release(input: inputType)`
+#### `uranium.release(input: inputType, pn: number)`
 Same as [`uranium.press`](#uraniumpressinput-inputtype), except for releasing a key.
 
 #### A note about keyboard inputs
