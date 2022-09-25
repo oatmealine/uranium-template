@@ -28,6 +28,7 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`ActorFrameTexture`](#actorframetexture)
     - [`ActorFrame`](#actorframe)
     - [`ActorScroller`](#actorscroller)
+    - [`BitmapText`](#bitmaptext)
   - [Shaders](#shaders)
 - [Callback usage](#callback-usage)
   - [Default callbacks](#default-callbacks)
@@ -278,6 +279,22 @@ end
 #### `ActorScroller`
 
 `ActorFrame` already has an extremely, _extremely_ complicated setup powering it in the back-end; and `ActorScroller` is way too niche for me to give it the same treatment. Sorry!
+
+#### `BitmapText`
+
+If you want to specify theme-provided fonts, that's easy enough:
+
+```lua
+local text1 = BitmapText(nil, 'test') -- defaults to 'common'
+local text2 = BitmapText('_wendy white', 'test')
+local text3 = BitmapText('_misobold white', 'test')
+```
+
+However, providing custom fonts is a bit tedious due to a [vanilla bug](https://discord.com/channels/227650173256466432/666629297544495124/1023573412028891177) that's annoying to work around. In order to specify a custom font, consider the _root path_ to be in `template/`. For example, if you want to load a font from your `src/` folder, you'd do:
+
+```lua
+local text = BitmapText('../src/_inter v 22px.ini', 'test')
+```
 
 ### Shaders
 
