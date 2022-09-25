@@ -139,6 +139,7 @@ Uranium Template originally formed during the creation of a currently unreleased
 
 Installation is the exact same as any other NotITG template:
 
+0. Get the latest template version from [the Gitea releases page](https://git.oat.zone/oat/uranium-template/releases)
 1. Unzip your installation zip, as you would a modfile
 2. Edit `Song.sm` in your editor of choice (ArrowVortex, NotITG) to include necessary metadata; replace `silence.ogg` with an actual track, if necessary
 3. Edit `main.lua` to do whatever you wish to do with it! The entirety of the `src/` folder is yours!
@@ -148,10 +149,12 @@ Installation is the exact same as any other NotITG template:
 
 After you're done with writing your file, be sure to take these steps to reduce the filesize and get your game ready for zipping up!
 
-- Remove `MANUAL.md`, `jillo_png.png`, `docs/`, `.vscode/`, `.gitconfig`, `.gitignore` and `template/typings.lua`. These are files that aren't necessary outside of a development environment!
+- Remove `MANUAL.md`, `docs/`, `.vscode/`, `.gitconfig`, `.gitignore` and `template/typings.lua`. These are files that aren't necessary outside of a development environment!
 - Optionally, remove `Song.sm.auto` and `Song.sm.old`. These files may not exist depending on certain factors.
 - If you've followed step 4 during [Installation](#installation), be sure to remove your typings folder (likely `.typings`)
 - If you're using Git, **PLEASE REMOVE YOUR `.git/` FOLDER!!!**
+
+If you're on Linux or have MSYS2/WSL/similar installed, you can use the [distribution script](distribute-file.sh).
 
 Afterwards, it should be safe to zip everything up and send it over!
 

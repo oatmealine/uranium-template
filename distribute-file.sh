@@ -1,0 +1,2 @@
+#!/bin/bash
+zip -9 -r package.zip --exclude="*.git*" --exclude="*.typings*" --exclude="*.vscode*" --exclude="*docs*" --exclude="*MANUAL.md" --exclude="*template/typings.lua*" --exclude="*.sm.auto*" --exclude="*.sm.old*" --exclude="*.sh*" .
