@@ -1091,7 +1091,7 @@ local input = require('stdlib.input')
 local DAMPING = 1/9500
 local SPEED = 2
 local JUMP_FORCE = 32
-local GRAVITY = 2.3
+local GRAVITY = 123
 local PLAYER_SIZE = 50
 
 local groundY = sh * 0.8
@@ -1129,7 +1129,7 @@ function uranium.update(dt)
   end
 
   -- apply gravity
-  vel.y = vel.y + GRAVITY
+  vel.y = vel.y + GRAVITY * dt
 
   -- update position, apply damping to velocity
   pos = pos + vel
