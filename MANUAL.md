@@ -288,11 +288,14 @@ local sprite = Sprite('docs/uranium.png')
 local shader = Shader('src/shader.frag') -- returns a RageShaderProgram
 ```
 
-Afterwards, call `SetShader` on your actor. **Use `__raw` on the shader, else it'll pass in the proxy object and break!!!**
+Afterwards, call `setShader` on your actor. _Using `:SetShader` will not work._
 
 ```lua
 function uranium.init()
-  sprite:SetShader(shader.__raw)
+  setShader(actor, shader)
+  -- or
+  setShaderfuck(shader)
+  -- (don't forget to clearShaderfuck())
 end
 ```
 
@@ -1271,7 +1274,7 @@ shader:uniform1f('yo', 1)
 shader:uniform1f('scale', 0.25)
 
 function uranium.init()
-  sprite:SetShader(shader.__raw) -- important!!!! we need __raw, else it'll pass in the proxy and error silently
+  setShader(sprite, shader)
 end
 
 function uranium.update()
