@@ -1411,8 +1411,3 @@ end
 **XeroOl** - Mirin Template was a massive design inspiration; early stages of this template borrowed lots of code from it and the current `require` implementation has been grabbed directly from it<br>
 **Mayflower**, **Aura** - Testing, design help<br>
 **mangoafterdawn** - The Uranium Template logo!<br>
-
-<br><br><br>
-<center>
-  <img src="jillo_png.png" alt="You didn't delete the included image of Jillo, did you?" title="jillo :)" height="96px">
-</center>
