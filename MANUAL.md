@@ -24,6 +24,7 @@ Uranium Template originally formed during the creation of a currently unreleased
 - [How do I start writing code?](#how-do-i-start-writing-code)
 - [Defining actors](#defining-actors)
   - [Initializing actors](#initializing-actors)
+  - [Accessing raw actors](#accessing-raw-actors)
   - [Actor-specific notes](#actor-specific-notes)
     - [`ActorFrameTexture`](#actorframetexture)
     - [`ActorFrame`](#actorframe)
@@ -231,6 +232,27 @@ sprite:addcommand('Init', function(self)
   someTexture = self:GetTexture()
 end)
 ```
+
+### Accessing raw actors
+
+As you may have noticed, when you print an actor defined with Uranium, it won't show up as an actor - it'll show up as a "proxy" of an actor. This is because we can't actually get actors created on demand in NotITG - what happens instead is you get an object that _acts_ like an actor by calling all the same methods you pass into it, but isn't really one.
+
+```lua
+local q = Quad()
+print(q) --> 'Proxy of Quad'
+```
+
+Typically, this doesn't matter; however, in certain contexts, it may be required for you to get the raw actor from a proxy actor. You can do this by accessing `__raw` on the actor - this is defined on all actors and is only available _post-initialization_.
+
+```lua
+local q = Quad()
+print(q.__raw) --> nil
+q:addcommand('Init', function()
+  print(q.__raw) --> 'Sprite (168F7F78)'
+end)
+```
+
+For most things that require this, there exist simple abstractions - applying shaders has `setShader`, `setShaderfuck`, etc., however in rare circumstances this may be useful. _Please let me know if there's a use-case that I haven't accounted for!_
 
 ### Actor-specific notes
 
