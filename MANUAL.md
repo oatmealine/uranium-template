@@ -120,6 +120,7 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`rng:jump(): void`](#rngjump-void)
     - [`rng:longJump(): void`](#rnglongjump-void)
   - [`ease`](#ease)
+  - [`profiler`](#profiler)
   - [`util`](#util)
   - [`aft`](#aft)
   - [`noautplay`](#noautplay)
@@ -985,6 +986,12 @@ The long-jump function:
 _Exports globals_
 
 A direct copy of [Mirin Template's `ease.lua`](https://github.com/XeroOl/notitg-mirin/blob/master/template/ease.lua), for convinience. See the docs for those [**here**](https://xerool.github.io/notitg-mirin/docs/eases.html).
+
+### `profiler`
+
+_Defines callbacks_
+
+A simple profiler for Uranium Template's callback system. Require it and it'll display in the left-top corner of your screen, showing what callback functions are taking the longest to run.
 
 ### `util`
 
