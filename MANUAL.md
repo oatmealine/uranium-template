@@ -121,6 +121,7 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`rng:jump(): void`](#rngjump-void)
     - [`rng:longJump(): void`](#rnglongjump-void)
   - [`ease`](#ease)
+  - [`players`](#players)
   - [`profiler`](#profiler)
   - [`util`](#util)
   - [`aft`](#aft)
@@ -1009,6 +1010,18 @@ _Exports globals_
 
 A direct copy of [Mirin Template's `ease.lua`](https://github.com/XeroOl/notitg-mirin/blob/master/template/ease.lua), for convinience. See the docs for those [**here**](https://xerool.github.io/notitg-mirin/docs/eases.html).
 
+### `players`
+
+_Exports globals_
+
+Pulls in the players as `P[1-8]` and `P<1-8>`.
+
+```lua
+require('stdlib.players')
+P1:hidden(1)
+P2:hidden(1)
+```
+
 ### `profiler`
 
 _Defines callbacks_
@@ -1051,7 +1064,7 @@ require('stdlib.noautoplay')()
 
 ### `eternalfile`
 
-A single function which turns your file into an eternal, neverending file, until the player puts it out of its misery by exiting. The current beat will always go from 0 to 1 and start over once this is enabled.
+A single function which turns your file into an eternal, neverending file, until the player puts it out of its misery by exiting. The current beat will always go from 0 to 1 and start over once this is enabled. This also sets the notedata to nothing to avoid hitting padding mines.
 
 ```lua
 require('stdlib.eternalfile')()
