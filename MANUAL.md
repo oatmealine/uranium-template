@@ -332,15 +332,13 @@ local sprite = Sprite('docs/uranium.png')
 local shader = Shader('src/shader.frag') -- returns a RageShaderProgram
 ```
 
-Afterwards, call `setShader` on your actor. _Using `:SetShader` will not work._
+Afterwards, call `setShader` on your actor. You can call this outside of `uranium.init`, if you like.
 
 ```lua
-function uranium.init()
-  setShader(actor, shader)
-  -- or
-  setShaderfuck(shader)
-  -- (don't forget to clearShaderfuck())
-end
+setShader(actor, shader)
+-- or
+setShaderfuck(shader)
+-- (don't forget to clearShaderfuck())
 ```
 
 If you prefer, you can also inline shader code, as long as you don't mix files with inlined code in the same shader:
@@ -1339,9 +1337,7 @@ void main() {
 shader:uniform1f('yo', 1)
 shader:uniform1f('scale', 0.25)
 
-function uranium.init()
-  setShader(sprite, shader)
-end
+setShader(sprite, shader)
 
 function uranium.update()
   shader:uniform1f('tx', t)
