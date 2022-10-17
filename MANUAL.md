@@ -303,6 +303,23 @@ end
 
 **Nested AFs are supported.** As with all complicated things in this template, check out the [`ActorFrame` example](#simple-actorframe-setup) for a simple working setup.
 
+An additional extra feature Uranium Template adds to assist with rendering multiple instances is the ability to pass in arguments through `Draw()`:
+
+```lua
+setDrawFunction(af, function(x, y)
+  quad:xy(x, y)
+  quad:Draw()
+end)
+
+function uranium.update()
+  for x = 0, 3 do
+    for y = 0, 3 do
+      af:Draw(x, y)
+    end
+  end
+end
+```
+
 #### `ActorScroller`
 
 `ActorFrame` already has an extremely, _extremely_ complicated setup powering it in the back-end; and `ActorScroller` is way too niche for me to give it the same treatment. Sorry!
