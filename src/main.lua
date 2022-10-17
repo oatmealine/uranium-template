@@ -1,4 +1,8 @@
 require('stdlib.color')
+require('stdlib.players')
+P1:hidden(1)
+P2:hidden(2)
+require('stdlib.eternalfile')()
 
 -- define a basic quad
 local quad = Quad()
