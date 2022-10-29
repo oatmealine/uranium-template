@@ -30,6 +30,7 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`ActorFrame`](#actorframe)
     - [`ActorScroller`](#actorscroller)
     - [`BitmapText`](#bitmaptext)
+    - [Textures](#textures)
   - [Shaders](#shaders)
 - [Callback usage](#callback-usage)
   - [Default callbacks](#default-callbacks)
@@ -338,6 +339,17 @@ However, providing custom fonts is a bit tedious due to a [vanilla bug](https://
 
 ```lua
 local text = BitmapText('../src/_inter v 22px.ini', 'test')
+```
+
+#### Textures
+
+For convinience, `Texture` is a function that will give you a `RageTexture` from a filename without the actor. Equivalent to:
+
+```lua
+local sprite = Sprite('filename.png')
+sprite:hidden(1)
+local texture = sprite:GetTexture()
+return texture
 ```
 
 ### Shaders
