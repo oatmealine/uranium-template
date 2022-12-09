@@ -200,9 +200,11 @@ text:rotationz(30)
 text:diffuse(1, 0.8, 0.8, 1)
 ```
 
-All methods that you run upon definition will be ran again at the start of every frame:
+All methods that you run upon definition will be ran again at the start of every frame with `resetOnFrameStart`:
 
 ```lua
+resetOnFrameStart(true)
+
 local quad = Quad()
 quad:xy(scx, scy)
 quad:zoomto(60, 60)
@@ -217,7 +219,7 @@ function uranium.update()
 end
 ```
 
-If you want to avoid this, or otherwise call getter methods, use the [`uranium.init`](#uraniuminit) callback:
+If you want to avoid this for individual actors, or otherwise call getter methods, use the [`uranium.init`](#uraniuminit) callback:
 
 ```lua
 local sprite = Sprite()
@@ -233,6 +235,14 @@ local sprite = Sprite()
 sprite:addcommand('Init', function(self)
   someTexture = self:GetTexture()
 end)
+```
+
+Or, you can disable the frame resetting functionality individually:
+```lua
+resetOnFrameStart(true)
+local sprite = Sprite()
+resetActorOnFrameStart(sprite, false)
+sprite:Draw() -- will not be called per-frame
 ```
 
 ### Accessing raw actors
@@ -1134,6 +1144,7 @@ quad:xy(scx, scy)
 quad:zoom(120)
 quad:diffuse(0.8, 1, 0.7, 1)
 quad:skewx(0.2)
+resetActorOnFrameStart(quad)
 
 -- define a sprite
 local sprite = Sprite('docs/uranium.png')
@@ -1363,12 +1374,12 @@ void main() {
   gl_FragColor = col * color;
 }
 ]])
-shader:uniform1f('yo', 1)
-shader:uniform1f('scale', 0.25)
-
 setShader(sprite, shader)
 
 function uranium.update()
+  shader:uniform1f('yo', 1)
+  shader:uniform1f('scale', 0.25)
+
   shader:uniform1f('tx', t)
   shader:uniform1f('ty', t)
 

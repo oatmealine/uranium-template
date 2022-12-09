@@ -10,6 +10,7 @@ quad:xy(scx, scy)
 quad:zoom(120)
 quad:diffuse(0.8, 1, 0.7, 1)
 quad:skewx(0.2)
+resetActorOnFrameStart(quad)
 
 -- define a sprite
 local sprite = Sprite('docs/uranium.png')
