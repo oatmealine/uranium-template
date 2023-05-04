@@ -1095,20 +1095,13 @@ There's _a bit too many_ functions to document, so I'd recommend just looking th
 
 ### `aft`
 
-An AFT setup library. Sets up sprites and AFTs with `sprite` and `aft`, respectively, making them ready for texturing use.
+An AFT setup library. Sets up sprites and AFTs with `sprite` and `aft`, or all-in-one with `aftSetup`, making them ready for texturing use.
 
 ```lua
-local aftSetup = require('stdlib.aft')
+local aftlib = require('stdlib.aft')
 
-local aft = ActorFrameTexture()
-
-local aftSprite = Sprite()
-aftSetup.sprite(aftSprite)
-
-aft:addcommand('Init', function(self)
-  aftSetup.aft(aft) -- put this here; else it'll recreate it every frame!
-  aftSprite:SetTexture(self:GetTexture())
-end)
+-- aftSprite is a Sprite, set to the texture of aft, an ActorFrameTexture
+local aft, aftSprite = aftlib.aftSetup()
 ```
 
 ### `noautplay`
