@@ -461,7 +461,7 @@ end)
 Then all you need to do to call it is:
 
 ```lua
-uranium:call('somethingHappened', extra, values, go, here)
+uranium.call('somethingHappened', extra, values, go, here)
 ```
 
 Callbacks support as many extra values as Lua supports arguments in a function - so let's just say you won't be running out of them any time soon.
