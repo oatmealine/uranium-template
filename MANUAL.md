@@ -130,7 +130,7 @@ Uranium Template originally formed during the creation of a currently unreleased
   - [`profiler`](#profiler)
   - [`util`](#util)
   - [`aft`](#aft)
-  - [`noautplay`](#noautplay)
+  - [`noautoplay`](#noautoplay)
   - [`eternalfile`](#eternalfile)
   - [`uwuify`](#uwuify)
 - [Examples](#examples)
@@ -743,9 +743,9 @@ n:reset(value)
 
 -- then, in your update function
 uranium.on('update', function(dt)
-  n(dt) -- multiply this image by some value to speed it up
-  print(n.a) -- retrieve the eased value
-  print(n.toa) -- retrieve the target value it's easing towards
+  n:update(dt) -- multiply this image by some value to speed it up
+  print(n.eased) -- retrieve the eased value
+  print(n.target) -- retrieve the target value it's easing towards
 end)
 ```
 
@@ -755,15 +755,15 @@ Creates a new easable, setting the default to `default`. Can technically be anyt
 
 #### `easable:set(new: number): void`
 
-Sets the target value (`toa`) to `new`, easing the current value to the new value.
+Sets the target value (`target`) to `new`, easing the current value to the new value.
 
 #### `easable:add(new: number): void`
 
-Equivalent to `easable:add(easable.toa + new)`.
+Equivalent to `easable:add(easable.target + new)`.
 
 #### `easable:reset(new: number): void`
 
-Sets the current (`a`) and target (`toa`) values to `new`, **not** easing the current value to the new value.
+Sets the current (`eased`) and target (`target`) values to `new`, **not** easing the current value to the new value.
 
 #### Operations
 
@@ -1104,7 +1104,7 @@ local aftlib = require('stdlib.aft')
 local aft, aftSprite = aftlib.aftSetup()
 ```
 
-### `noautplay`
+### `noautoplay`
 
 A single function which can be called before `ready()` to disable autoplay for the duration of the file if the player has it on. ***Not tested.***
 
