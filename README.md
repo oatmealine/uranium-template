@@ -28,18 +28,18 @@ Then define callbacks with a simple function definition:
 
 ```lua
 local timer = 0
-function uranium.update(dt)
+uranium.on('update', function(dt)
   timer = timer + dt
-end
+end)
 ```
 
 And then define the draw order of your actors with simple method calls, similar to DrawFunctions:
 
 ```lua
-function uranium.update()
+uranium.on('update', function()
   quad:rotationz(t * 50)
   quad:Draw()
-end
+end)
 ```
 
 It comes with an extensive standard library, including common game-development needs like:
