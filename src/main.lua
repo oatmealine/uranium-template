@@ -24,7 +24,7 @@ text:xy(scx, scy + 100)
 
 -- update gets called every frame
 -- dt here refers to deltatime - the time that has passed since the last frame!
-function uranium.update(dt)
+uranium.on('update', function(dt)
   -- let's rotate our quad
   quad:rotationz(t * 80)
   -- then shove it to the screen - similar to a drawfunction!
@@ -52,4 +52,4 @@ function uranium.update(dt)
   -- wag the text
   text:rotationz(math.sin(t * 2) * 10)
   text:Draw()
-end
+end)

@@ -34,11 +34,11 @@ Uranium Template originally formed during the creation of a currently unreleased
   - [Shaders](#shaders)
 - [Callback usage](#callback-usage)
   - [Default callbacks](#default-callbacks)
-    - [`uranium.update(dt: number)`](#uraniumupdatedt-number)
-    - [`uranium.init()`](#uraniuminit)
-    - [`uranium.ready()`](#uraniumready)
-    - [`uranium.exit()`](#uraniumexit)
-    - [`uranium.focus(hasFocus: boolean)`](#uraniumfocushasfocus-boolean)
+    - [`update(dt: number)`](#updatedt-number)
+    - [`init()`](#init)
+    - [`ready()`](#ready)
+    - [`exit()`](#exit)
+    - [`focus(hasFocus: boolean)`](#focushasfocus-boolean)
   - [Custom callbacks](#custom-callbacks)
 - [Requiring files](#requiring-files)
 - [Standard library](#standard-library)
@@ -88,8 +88,8 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`input.keyboardEquivalent`](#inputkeyboardequivalent)
     - [`input.getInput(i: string, pn: number | nil): number`](#inputgetinputi-string-pn-number--nil-number)
     - [`input.isDown(i: string, pn: number | nil): number`](#inputisdowni-string-pn-number--nil-number)
-    - [`uranium.press(input: inputType, pn: number)`](#uraniumpressinput-inputtype-pn-number)
-    - [`uranium.release(input: inputType, pn: number)`](#uraniumreleaseinput-inputtype-pn-number)
+    - [`press(input: inputType, pn: number)`](#pressinput-inputtype-pn-number)
+    - [`release(input: inputType, pn: number)`](#releaseinput-inputtype-pn-number)
     - [A note about keyboard inputs](#a-note-about-keyboard-inputs)
   - [`bitop`](#bitop)
   - [`scheduler`](#scheduler)
@@ -167,7 +167,7 @@ Afterwards, it should be safe to zip everything up and send it over!
 `main.lua` is the entry-point for your code! From there, you can do the following:
 
 - [Define some actors](#defining-actors), and [call initialization methods on those actors](#initializing-actors) to set them up
-- [Define callbacks](#callback-usage), such as the [update](#uraniumupdatedt-number) callback
+- [Define callbacks](#callback-usage), such as the [update](#updatedt-number) callback
 - [Require more files in](#requiring-files)! Splitting your code into neat little modules is always good practice.
 - Make use of the expansive [standard library](#standard-library), like the [vector](#vector2d) or [color](#color) classes
 
@@ -210,23 +210,23 @@ quad:xy(scx, scy)
 quad:zoomto(60, 60)
 quad:diffusealpha(1)
 
-function uranium.update()
+uranium.on('update',
   -- doesn't need a reset! it'll automatically zoomto 60, 60 and set its alpha to 1
   quad:Draw()
   quad:zoomto(120, 120)
   quad:diffusealpha(0.5)
   quad:Draw()
-end
+end)
 ```
 
-If you want to avoid this for individual actors, or otherwise call getter methods, use the [`uranium.init`](#uraniuminit) callback:
+If you want to avoid this for individual actors, or otherwise call getter methods, use the [`init`](#init) callback:
 
 ```lua
 local sprite = Sprite()
 
-function uranium.init()
+uranium.on('init', function()
   someTexture = sprite:GetTexture()
-end
+end)
 ```
 
 Alternatively, you can also use the actors' individual `InitCommand`s:
@@ -307,9 +307,9 @@ setDrawFunction(af, function() -- necessary to call this instead of af.SetDrawFu
   sprite:Draw()
 end)
 
-function uranium.update()
+uranium.on('update', function()
   af:Draw() -- would draw quad and sprite
-end
+end)
 ```
 
 **Nested AFs are supported.** As with all complicated things in this template, check out the [`ActorFrame` example](#simple-actorframe-setup) for a simple working setup.
@@ -322,13 +322,13 @@ setDrawFunction(af, function(x, y)
   quad:Draw()
 end)
 
-function uranium.update()
+uranium.on('update', function()
   for x = 0, 3 do
     for y = 0, 3 do
       af:Draw(x, y)
     end
   end
-end
+end)
 ```
 
 #### `ActorScroller`
@@ -371,7 +371,7 @@ local sprite = Sprite('docs/uranium.png')
 local shader = Shader('src/shader.frag') -- returns a RageShaderProgram
 ```
 
-Afterwards, call `setShader` on your actor. You can call this outside of `uranium.init`, if you like.
+Afterwards, call `setShader` on your actor. You can call this outside of `init`, if you like.
 
 ```lua
 setShader(actor, shader)
@@ -413,15 +413,15 @@ Check [the shader example](#shader-test) if you just want something to play arou
 
 ## Callback usage
 
-Uranium uses a unique callback system - to define a callback, you define a function under `uranium.` with your desired callback name:
+Callbacks are defined with `uranium.on`:
 
 ```lua
-function uranium.update(dt)
+uranium.on('update', function(dt)
   -- runs every frame
-end
+end)
 ```
 
-You can do this as many times as you like - it'll call every single function that's defined as `uranium.update`, not just the last!
+You can do this as many times as you like - it'll call every single function that's defined as `update`, not just the last!
 
 If you return a non-falsy value in a callback, however, it'll cancel every other callback after it. This can be useful for, eg. capturing inputs and ensuring they don't get passed through to other callbacks on accident.
 
@@ -429,19 +429,19 @@ If you return a non-falsy value in a callback, however, it'll cancel every other
 
 These are the callbacks that are built into Uranium:
 
-#### `uranium.update(dt: number)`
+#### `update(dt: number)`
 Called every frame. `dt` is the time passed since the last frame, the "deltatime".
 
-#### `uranium.init()`
+#### `init()`
 Called once on `OnCommand`. Every actor has been created, and the game should be starting shortly.
 
-#### `uranium.ready()`
+#### `ready()`
 Fired on the first tick. A later version of `init()` where more things should be safe to use.
 
-#### `uranium.exit()`
+#### `exit()`
 _Should_ call when the player exits the file. **Not properly tested yet.**
 
-#### `uranium.focus(hasFocus: boolean)`
+#### `focus(hasFocus: boolean)`
 Called whenever the window loses/gains focus. You can use this to reduce render quality on alt-tab.
 
 ### Custom callbacks
@@ -449,9 +449,9 @@ Called whenever the window loses/gains focus. You can use this to reduce render 
 Custom callbacks require no extra setup. Define your callback like usual:
 
 ```lua
-function uranium.somethingHappened(value)
+uranium.on('somethingHappened', function(value)
   -- ...
-end
+end)
 ```
 
 Then all you need to do to call it is:
@@ -722,11 +722,11 @@ n:add(value)
 n:reset(value)
 
 -- then, in your update function
-function uranium.update(dt)
+uranium.on('update', function(dt)
   n(dt) -- multiply this image by some value to speed it up
   print(n.a) -- retrieve the eased value
   print(n.toa) -- retrieve the target value it's easing towards
-end
+end)
 ```
 
 #### `easable(default: number): easable`
@@ -835,11 +835,11 @@ input.inputs[1][input.inputType.Left] == input.getInput('Left', 1)
 
 Shorthand for `input.getInput(i, pn) ~= -1`. If `pn` is not provided, players are ignored and it checks if either of the players have the input held down
 
-#### `uranium.press(input: inputType, pn: number)`
+#### `press(input: inputType, pn: number)`
 Called when a player presses on a certain key.
 
-#### `uranium.release(input: inputType, pn: number)`
-Same as [`uranium.press`](#uraniumpressinput-inputtype), except for releasing a key.
+#### `release(input: inputType, pn: number)`
+Same as [`press`](#pressinput-inputtype), except for releasing a key.
 
 #### A note about keyboard inputs
 
@@ -885,7 +885,7 @@ Schedules a function to run in a specific amount of time. `when` is in seconds.
 
 #### `scheduler.scheduleInTicks(when: number, func: function): number`
 
-Schedules a function to run in a specific amount of `uranium.update` calls/ticks.
+Schedules a function to run in a specific amount of `update` calls/ticks.
 
 #### `scheduler.unschedule(i: index): void`
 
@@ -953,13 +953,13 @@ local counter = {
 
 savedata.s(counter)
 
-function uranium.init()
+uranium.on('init', function()
   print(counter.n) --> could be different from 0!
-end
+end)
 
-function uranium.update()
+uranium.on('update', function()
   counter.n = counter.n + 1 -- this will be saved the next time savedata.save is called
-end
+end)
 ```
 
 By default, the name that's used for your module will be the folder your Lua file is located in, followed by its filename. **This means you should not rely on the automatic name generation if your Lua file rests at the root of your file or if you're calling this function via `loadstring` or similar** as it will create unpredictable module names that will change between setups and sometimes even game restarts. You can pass in any string you like to `name`, as long as it's unique in your project, to override this behavior.
@@ -970,7 +970,7 @@ Saves the savedata onto the user's profile. It waits a single tick to do so and 
 
 #### `savedata.load(): void`
 
-Loads the savedata. _Shouldn't be called manually; this is automatically called on [`uranium.init()`](#uraniuminit)._
+Loads the savedata. _Shouldn't be called manually; this is automatically called on [`init()`](#init)._
 
 #### `savedata.getLastSave(): string[] | nil`
 
@@ -978,7 +978,7 @@ Gets the last save time that persists between game restarts in the format `{hour
 
 #### `savedata.enableAutosave(): void`
 
-Enables autosave via [`uranium.exit()`](#uraniumexit). Should hopefully mean data should never get lost.
+Enables autosave via [`exit()`](#exit). Should hopefully mean data should never get lost.
 
 ### `env`
 
@@ -1093,7 +1093,7 @@ end)
 
 ### `noautplay`
 
-A single function which can be called before `uranium.ready()` to disable autoplay for the duration of the file if the player has it on. ***Not tested.***
+A single function which can be called before `ready()` to disable autoplay for the duration of the file if the player has it on. ***Not tested.***
 
 ```lua
 require('stdlib.noautoplay')()
@@ -1125,9 +1125,9 @@ Here are a couple of examples. All of these are standalone `main.lua` files that
 local text = BitmapText('common', 'Hello, world!')
 text:xy(scx, scy)
 
-function uranium.update()
+uranium.on('update', function()
   text:Draw()
-end
+end)
 ```
 
 ### Default Uranium Template code
@@ -1158,7 +1158,7 @@ text:xy(scx, scy + 100)
 
 -- update gets called every frame
 -- dt here refers to deltatime - the time that has passed since the last frame!
-function uranium.update(dt)
+uranium.on('update', function(dt)
   -- let's rotate our quad
   quad:rotationz(t * 80)
   -- then shove it to the screen - similar to a drawfunction!
@@ -1186,7 +1186,7 @@ function uranium.update(dt)
   -- wag the text
   text:rotationz(math.sin(t * 2) * 10)
   text:Draw()
-end
+end)
 ```
 
 ### Simple platformer base
@@ -1218,15 +1218,15 @@ local vel = vector(0, 0)
 local hasHitGround = true -- let's define this so that you can't jump mid-air
 
 -- called whenever the player recieves an input
-function uranium.press(i)
+uranium.on('press', function(i)
   if i == input.inputType.Up and hasHitGround then
     vel.y = vel.y - JUMP_FORCE
     hasHitGround = false
     return true -- input eaten! further callbacks won't recieve this
   end
-end
+end)
 
-function uranium.update(dt)
+uranium.on('update', function(dt)
   -- respond to l/r inputs
   if input.isDown('Left') then
     vel.x = vel.x - SPEED
@@ -1262,7 +1262,7 @@ function uranium.update(dt)
 
   -- draw the ground
   ground:Draw()
-end
+end)
 ```
 
 ### AFTs
@@ -1297,7 +1297,7 @@ end)
 local text = BitmapText('common', 'uranium template!')
 text:xy(scx, scy)
 
-function uranium.update(dt)
+uranium.on('update', function(dt)
   coverQuad:Draw()
 
   aftSprite:Draw()
@@ -1312,7 +1312,7 @@ function uranium.update(dt)
   aft:Draw()
 
   text:Draw()
-end
+end)
 ```
 
 ### Shader test
@@ -1376,7 +1376,7 @@ void main() {
 ]])
 setShader(sprite, shader)
 
-function uranium.update()
+uranium.on('update', function()
   shader:uniform1f('yo', 1)
   shader:uniform1f('scale', 0.25)
 
@@ -1390,7 +1390,7 @@ function uranium.update()
   reset(sprite)
   shader:uniform1f('yo', 0)
   sprite:Draw()
-end
+end)
 ```
 
 ### Savedata example
@@ -1411,7 +1411,7 @@ savedata.s(save)
 local text = BitmapText('common', '')
 text:xy(scx, scy)
 
-function uranium.press(key)
+uranium.on('press', function(key)
   if key == input.inputType.Left then
     save.leftPresses = save.leftPresses + 1
   elseif key == input.inputType.Right then
@@ -1419,9 +1419,9 @@ function uranium.press(key)
   elseif key == input.inputType.Down then
     savedata.save()
   end
-end
+end)
 
-function uranium.update(dt)
+uranium.on('update', function(dt)
   text:settext(
     'left presses: ' .. save.leftPresses .. '\n' ..
     'right presses: ' .. save.rightPresses
@@ -1433,7 +1433,7 @@ function uranium.update(dt)
     text:settext('saving!')
     text:Draw()
   end
-end
+end)
 ```
 
 ### Simple ActorFrame setup
@@ -1486,9 +1486,9 @@ setDrawFunction(af, function()
   sprite:Draw()
 end)
 
-function uranium.update()
+uranium.on('update', function()
   af:Draw()
-end
+end)
 ```
 
 ## Credits
