@@ -41,6 +41,10 @@ Uranium Template originally formed during the creation of a currently unreleased
     - [`focus(hasFocus: boolean)`](#focushasfocus-boolean)
   - [Custom callbacks](#custom-callbacks)
 - [Requiring files](#requiring-files)
+- [Configuration](#configuration)
+    - [`uranium.config.resetOnFrameStart(bool: boolean)`](#uraniumconfigresetonframestartbool-boolean)
+    - [`uranium.config.resetActorOnFrameStart(actor: Actor, bool: boolean?)`](#uraniumconfigresetactoronframestartactor-actor-bool-boolean)
+    - [`uranium.config.hideThemeActors(bool: boolean)`](#uraniumconfighidethemeactorsbool-boolean)
 - [Standard library](#standard-library)
   - [Importing modules](#importing-modules)
   - [`vector2D`](#vector2d)
@@ -200,10 +204,10 @@ text:rotationz(30)
 text:diffuse(1, 0.8, 0.8, 1)
 ```
 
-All methods that you run upon definition will be ran again at the start of every frame with `resetOnFrameStart`:
+All methods that you run upon definition will be ran again at the start of every frame with `uranium.config.resetOnFrameStart`:
 
 ```lua
-resetOnFrameStart(true)
+uranium.config.resetOnFrameStart(true)
 
 local quad = Quad()
 quad:xy(scx, scy)
@@ -239,9 +243,9 @@ end)
 
 Or, you can disable the frame resetting functionality individually:
 ```lua
-resetOnFrameStart(true)
+uranium.config.resetOnFrameStart(true)
 local sprite = Sprite()
-resetActorOnFrameStart(sprite, false)
+uranium.config.resetActorOnFrameStart(sprite, false)
 sprite:Draw() -- will not be called per-frame
 ```
 
@@ -482,6 +486,22 @@ return 'hello!'
 Your setup would print `'hello!'`.
 
 All [standard library](#standard-library) modules are required with `require`, see further notes in [**Importing modules**](#importing-modules).
+
+## Configuration
+
+Uranium Template's base functionality can be configured using `uranium.config`. You can access the raw values by requiring `uranium.config`, but this is currently undocumented.
+
+#### `uranium.config.resetOnFrameStart(bool: boolean)`
+
+Toggle actor resetting on frame start behavior by default. _(Default: `false`)_
+
+#### `uranium.config.resetActorOnFrameStart(actor: Actor, bool: boolean?)`
+
+Toggle actor resetting on frame start for individual actors. `bool` defaults to the opposite of your `resetOnFrameStart` config.
+
+#### `uranium.config.hideThemeActors(bool: boolean)`
+
+Toggle if theme actors (lifebars, scores, song names, etc.) are hidden. Must be toggled **before** `init`. _(Default: `true`)_
 
 ## Standard library
 
@@ -1144,7 +1164,7 @@ quad:xy(scx, scy)
 quad:zoom(120)
 quad:diffuse(0.8, 1, 0.7, 1)
 quad:skewx(0.2)
-resetActorOnFrameStart(quad)
+uranium.config.resetActorOnFrameStart(quad)
 
 -- define a sprite
 local sprite = Sprite('docs/uranium.png')
