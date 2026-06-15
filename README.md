@@ -44,6 +44,25 @@ your scene is defined in code:
 the `stdlib` namespace, such as libraries handling input, scheduling, savedata,
 events, and other miscellaneous utilities.
 
+  ```lua
+  local events = require 'uranium.events'
+
+  local t = 0
+  events:on('update', function(dt)
+    t = t + dt
+  end)
+  ```
+
+  ```lua
+  local input = require 'stdlib.input'
+
+  input.events:on('press', function(key, pn)
+    if key == input.inputType.Start then
+      print('Hi')
+    end
+  end)
+  ```
+
 Uranium is also different from other templates in that it is much lower level
 than most other templates, which means other templates can be put into it. For
 instance, as Mirin Template is a very popular choice for modfiles, the entirety
