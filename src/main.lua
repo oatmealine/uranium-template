@@ -1,31 +1,37 @@
-require('stdlib.color')
-require('stdlib.players')
-P1:hidden(1)
-P2:hidden(2)
-require('stdlib.eternalfile')()
+local uranium = require 'uranium'
+local events = require 'uranium.events'
+
+local ctx = uranium.ctx
+
+events:on('ready', function()
+  require('stdlib.players')
+  P1:hidden(1)
+  P2:hidden(2)
+  require('stdlib.eternalfile')()
+end)
 
 -- define a basic quad
-local quad = Quad()
+local quad = ctx:Quad()
 quad:xy(scx, scy)
-quad:zoom(120)
-quad:diffuse(0.8, 1, 0.7, 1)
-quad:skewx(0.2)
-uranium.config.resetActorOnFrameStart(quad)
 
 -- define a sprite
-local sprite = Sprite('docs/uranium.png')
+local sprite = ctx:Sprite('docs/uranium.png')
 sprite:xy(scx, scy)
-sprite:zoom(0.4)
-sprite:glow(1, 1, 1, 0)
 
 -- let's add some text aswell
-local text = BitmapText('common', 'hello, uranium template!')
+local text = ctx:BitmapText('common', 'hello, uranium template v' .. uranium.release.version .. '!')
 text:xy(scx, scy + 100)
 
 -- update gets called every frame
 -- dt here refers to deltatime - the time that has passed since the last frame!
-uranium.on('update', function(dt)
-  -- let's rotate our quad
+local t = 0
+events:on('update', function(dt)
+  t = t + dt
+
+  -- let's set some properties on the quad
+  quad:zoom(120)
+  quad:diffuse(0.8, 1, 0.7, 1)
+  quad:skewx(0.2)
   quad:rotationz(t * 80)
   -- then shove it to the screen - similar to a drawfunction!
   quad:Draw()
@@ -35,20 +41,23 @@ uranium.on('update', function(dt)
   quad:diffusealpha(0.4)
   quad:skewx(0.1)
   quad:Draw()
-  -- no need to reset properties - uranium resets all properties that you set upon definition!
 
   -- throw in the logo aswell, because why not
   -- zoom and glow is done for a quick-and-dirty outline
   sprite:zoom(sprite:GetZoom() * 1.1)
   sprite:glow(1, 1, 1, 1)
   sprite:Draw()
-  -- if you can't wait until the start of a frame to reset properties, you can manually do it
-  reset(sprite)
+
+  sprite:zoom(0.4)
+  sprite:glow(1, 1, 1, 0)
   sprite:Draw()
 
-  -- for the text, get a rainbow color
-  local col = shsv(t * 0.6, 0.5, 1)
-  text:diffuse(col:unpack()) -- the :unpack() is necessary when passing into :diffuse()
+  -- for the text, get a (quick and dirty) rainbow color
+  local r, g, b =
+    0.75 + 0.25 * math.cos(t),
+    0.75 + 0.25 * math.cos(t - 2/3 * math.pi),
+    0.75 + 0.25 * math.cos(t - 4/3 * math.pi)
+  text:diffuse(r, g, b, 1)
   -- wag the text
   text:rotationz(math.sin(t * 2) * 10)
   text:Draw()

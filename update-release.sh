@@ -1,4 +1,7 @@
-#!/bin/bash
-rm template/uranium/release.lua
-read -p "enter release version: " version
-sed -e "s/branch = 'unknown'/branch = '$(git rev-parse --abbrev-ref HEAD)'/" -e "s/commit = 'unknown'/commit = '$(git rev-parse --short HEAD)'/" -e "s/version = 'unknown'/version = '$version'/" template/uranium/release_blank.lua > template/uranium/release.lua
+#!/usr/bin/env bash
+read -rp "enter release version: " version
+sed -i \
+  -e "s/branch = '.+'/branch = '$(git rev-parse --abbrev-ref HEAD)'/" \
+  -e "s/commit = '.+'/commit = '$(git rev-parse --short HEAD)'/" \
+  -e "s/version = '.+'/version = '$version'/" \
+  template/uranium/internal/release.lua

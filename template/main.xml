@@ -1,0 +1,93 @@
+<Layer Type="ActorFrame" InitCommand="%function(self)
+  _G.oat = {}
+  oat._main = self
+
+  setmetatable(oat, {
+    -- if something isn't found in the table, fall back to a global lookup
+    __index = _G,
+
+    -- handle oat() calls to set the environment
+    __call = function(self, f)
+      setfenv(f or 2, self)
+      return f
+    end
+  })
+
+  -- make require work
+  -- stolen from mirin template
+  -- https://github.com/XeroOl/notitg-mirin/blob/0fbff2ee93d905feeb58c4aac4fe7f5f9ebc9647/template/std.lua#L17
+  oat.package = {
+    base = GAMESTATE:GetCurrentSong():GetSongDir(),
+    -- uranium template loader path
+    path = 'src/?.lua;src/?/init.lua;template/?.lua;template/?/init.lua',
+    preload = {},
+    loaded = {},
+    loaders = {
+      function(modname)
+        local preload = oat.package.preload[modname]
+        return preload or 'no field oat.package.preload[\''..modname..'\']'
+      end,
+      function(modname)
+        local errors = {}
+        -- get the filename
+        local filename = string.gsub(modname, '%.', '/')
+        for path in (string.gfind or string.gmatch)(oat.package.path, '[^;]+') do
+          -- get the file path
+          local filepath = oat.package.base .. string.gsub(path, '%?', filename)
+          -- check if file exists
+          if not GAMESTATE:GetFileStructure(filepath) then
+            table.insert(errors, 'no file \''..filepath..'\'')
+          else
+            local loader, err = loadfile(filepath)
+            -- check if file loads properly
+            if err then
+              error(err, 3)
+            elseif loader then
+              return oat(loader)
+            end
+          end
+        end
+        return table.concat(errors, '\n')
+      end,
+    },
+  }
+
+  function oat.require(modname)
+    local loaded = oat.package.loaded
+    if not loaded[modname] then
+      local errors = {'module \''..modname..'\' not found:'}
+      local chunk
+      for _, loader in ipairs(oat.package.loaders) do
+        local result = loader(modname)
+        if type(result) == 'string' then
+          table.insert(errors, result)
+        elseif type(result) == 'function' then
+          chunk = result
+          break
+        end
+      end
+      if not chunk then
+        error(table.concat(errors, '\n'), 2)
+      end
+      loaded[modname] = chunk()
+      if loaded[modname] == nil then
+        loaded[modname] = true
+      end
+    end
+    return loaded[modname]
+  end
+
+  oat()
+
+  require 'uranium'
+
+  -- Needed by StepMania, in order to not kill lua mods early
+  self:sleep(9e9)
+
+  -- NotITG and OpenITG have a long standing bug where the InitCommand on an actor can run twice in certain cases.
+  -- By removing the command after it's done, it can only ever run once
+  self:removecommand('Init')
+end"><children>
+  <Layer File="actors.xml" />
+  <Layer Type="Quad" InitCommand="xywh,SCREEN_CENTER_X,SCREEN_CENTER_Y,SCREEN_WIDTH,SCREEN_HEIGHT;diffuse,#000000;sleep,9e9"/>
+</children></Layer>

@@ -1,0 +1,22 @@
+<ActorFrame><children>
+  <Layer Condition="oat.actor.Condition(false)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" InitCommand="%oat.actor.Init(1)" />
+  <Layer Condition="oat.actor.Condition(true)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" Frag="@oat.actor.Frag()" Vert="@oat.actor.Vert()" InitCommand="%oat.actor.Init(1)" />
+  <Layer Condition="oat.actor.Condition(false)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" InitCommand="%oat.actor.Init(2)" />
+  <Layer Condition="oat.actor.Condition(true)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" Frag="@oat.actor.Frag()" Vert="@oat.actor.Vert()" InitCommand="%oat.actor.Init(2)" />
+  <Layer Condition="oat.actor.Condition(false)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" InitCommand="%oat.actor.Init(3)" />
+  <Layer Condition="oat.actor.Condition(true)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" Frag="@oat.actor.Frag()" Vert="@oat.actor.Vert()" InitCommand="%oat.actor.Init(3)" />
+  <Layer Condition="oat.actor.Condition(false)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" InitCommand="%oat.actor.Init(4)" />
+  <Layer Condition="oat.actor.Condition(true)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" Frag="@oat.actor.Frag()" Vert="@oat.actor.Vert()" InitCommand="%oat.actor.Init(4)" />
+  <Layer Condition="oat.actor.Condition(false)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" InitCommand="%oat.actor.Init(5)" />
+  <Layer Condition="oat.actor.Condition(true)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" Frag="@oat.actor.Frag()" Vert="@oat.actor.Vert()" InitCommand="%oat.actor.Init(5)" />
+  <Layer Condition="oat.actor.Condition(false)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" InitCommand="%oat.actor.Init(6)" />
+  <Layer Condition="oat.actor.Condition(true)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" Frag="@oat.actor.Frag()" Vert="@oat.actor.Vert()" InitCommand="%oat.actor.Init(6)" />
+  <Layer Condition="oat.actor.Condition(false)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" InitCommand="%oat.actor.Init(7)" />
+  <Layer Condition="oat.actor.Condition(true)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" Frag="@oat.actor.Frag()" Vert="@oat.actor.Vert()" InitCommand="%oat.actor.Init(7)" />
+  <Layer Condition="oat.actor.Condition(false)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" InitCommand="%oat.actor.Init(8)" />
+  <Layer Condition="oat.actor.Condition(true)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" Frag="@oat.actor.Frag()" Vert="@oat.actor.Vert()" InitCommand="%oat.actor.Init(8)" />
+  <Layer Condition="oat.actor.Condition(false)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" InitCommand="%oat.actor.Init(9)" />
+  <Layer Condition="oat.actor.Condition(true)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" Frag="@oat.actor.Frag()" Vert="@oat.actor.Vert()" InitCommand="%oat.actor.Init(9)" />
+  <Layer Condition="oat.actor.Condition(false)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" InitCommand="%oat.actor.Init(10)" />
+  <Layer Condition="oat.actor.Condition(true)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" Frag="@oat.actor.Frag()" Vert="@oat.actor.Vert()" InitCommand="%oat.actor.Init(10)" />
+</children></ActorFrame>
