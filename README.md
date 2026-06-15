@@ -8,69 +8,49 @@
 </center>
 <br>
 
-### Please see [MANUAL.md](MANUAL.md) for the manual, and [uranium-core](https://git.oat.zone/oat/uranium-core) for the template code itself!
+**Uranium Template** is a low-level generic template for NotITG v4.9+. In
+particular, it's specialized towards non-modfile development, including
+minigames, file selectors, and other meta projects.
 
-<br>
+The design is pretty closely based off of the design of code-only engines like
+Love2D, and the goal is to provide a solid base to develop anything with a
+similar philosophy on top.
 
-**Uranium Template** is a Love2D-inspired NotITG game development template, focusing on keeping things as **Lua-pure** as possible with enough abstractions to make you feel like you're not dealing with Stepmania jank at all.
+Uranium Template originally formed during the creation of a currently unreleased
+project, and v2 formed during the creation of the [Mod Jam Kusoge lobby](https://www.youtube.com/watch?v=CSJ_pimhrYA).
+Since then I've refined and polished it up to be usable on its own. Most of the
+design decisions came from experience using prototype versions of it!
 
-Uranium Template originally formed during the creation of a currently unreleased project, and since then I've went ahead and refined and polished it up to be usable on its own. Most of the design decisions came from experience using prototype versions of it!
+## about
 
-Uranium Template lets you define actors with a single simple function indicating their type:
+Uranium Template differentiates itself from starting from scratch with
+`BGCHANGES` in the following ways:
 
-```lua
-local quad = Quad()
-quad:xy(scx, scy)
-quad:zoom(60)
-```
+- Uranium includes a `require`/`package` implementation similar to a regular Lua
+environment, which allows for much easier splitting of code into modules; all
+globals made in the template are sandboxed.
+- Uranium comes with `actor235`, a powerful actorgen library that creates actors
+from Lua code. This is highly useful in draw function-based development where
+your scene is defined in code:
 
-Then define callbacks with a simple function definition:
+  ```lua
+  local uranium = require 'uranium'
+  local ctx = uranium.ctx
 
-```lua
-local timer = 0
-uranium.on('update', function(dt)
-  timer = timer + dt
-end)
-```
+  local quad = ctx:Quad()
+  local sprite = ctx:Sprite('my/awesome/sprite.png')
+  ```
+- Uranium also comes with a set of other libraries useful for development under
+the `stdlib` namespace, such as libraries handling input, scheduling, savedata,
+events, and other miscellaneous utilities.
 
-And then define the draw order of your actors with simple method calls, similar to DrawFunctions:
+Uranium is also different from other templates in that it is much lower level
+than most other templates, which means other templates can be put into it. For
+instance, as Mirin Template is a very popular choice for modfiles, the entirety
+of it is actually bundled as a module in the `stdlib` namespace.
 
-```lua
-uranium.on('update', function()
-  quad:rotationz(t * 50)
-  quad:Draw()
-end)
-```
+## documentation
 
-It comes with an extensive standard library, including common game-development needs like:
-
-- An [input library](MANUAL.md#input) for detecting every input supported by the game
-- A simple, to-the-point [2D vector library](MANUAL.md#vector2d) that handles anything you can throw at it, including operators
-- A [color library](MANUAL.md#color) that handles most formats you'll think of
-- An efficient, compact non-centralized [save data library](MANUAL.md#savedata) that uses profiles for users' savefiles
-- A built-in profiler for callbacks
-- A [utility library](MANUAL.md#util) filled to the brim (but not bloated!) with common Lua gamedev snippets, like detecting if a table has an element, clamping, lerping and more
-
-It supports most of what NotITG modding has to offer:
-
-- [AFT support](MANUAL.md#actorframetexture), better than you've ever had it in XMLs
-- Both inline and file [shader support](MANUAL.md#shaders)
-- [Full ActorFrame support](MANUAL.md#actorframe), with nested ActorFrames all in a simple interface
-- Seamless Mirin Template integration through a [built-in module](MANUAL.md#mirin)
-
-And it has many features you've come to expect from your favorite templates:
-
-- [Lua module loading](MANUAL.md#requiring-files) through a `require` very similar to one present in vanilla Lua
-- Completely sandboxed globals
-- Clear error reporting at every possible opportunity, hopefully not letting you see a single error arise from an XML file
-
-Oh, and did I mention there's an [uwuification library](MANUAL.md#uwuify)?
-
-And if you're still not convinced, here's a couple of testimonials from our dear users:
-
-- "this template really adds some spice to your modfiles. think industrial glitter in your next chilli!" _- Mayflower_
-- "a good template that i have definitely used! jill can i go now. jill please i just want to see my family" _- Aura_
-
-<br/>
-
-To get started, consult the [manual](MANUAL.md), which comes free with your template. It has everything you need to start writing code, including extensive examples and documentation for just about every function and value in the template.
+All documentation about the download, installation, use and standard library
+modules is kept in the [manual](./MANUAL.md). It has everything you need to
+start writing code, including extensive examples.

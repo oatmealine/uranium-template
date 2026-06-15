@@ -2,22 +2,31 @@
 If you're viewing this in VSCode, it's recommended that you open it in a preview with `Ctrl+Shift+V`!
 </sub>
 
----
-
 <br>
 
 <center>
   <h2 style="font-size: 42px">
     <img src="docs/uranium.png" height="42px" alt="">
-    <b>Uranium Template</b> <em>α</em>
+    <b>Uranium Template</b>
   </h2>
-  <em style="font-family: 'Comic Sans MS', 'Comic Sans', Impact, Arial">Official manual!!!!</em>
+  <em style="font-family: 'Comic Sans MS', 'Comic Sans', Impact, Arial">Official manual!!!! (Now for v2!!!!)</em>
 </center>
 <br>
 
-**Uranium Template** is a Love2D-inspired NotITG game development template, focusing on keeping things as **Lua-pure** as possible with enough abstractions to make you feel like you're not dealing with Stepmania jank at all.
+**Uranium Template** is a low-level generic template for NotITG v4.9+. In
+particular, it's specialized towards non-modfile development, including
+minigames, file selectors, and other meta projects.
 
-Uranium Template originally formed during the creation of a currently unreleased project, and since then I've went ahead and refined and polished it up to be usable on its own. Most of the design decisions came from experience using prototype versions of it!
+The design is pretty closely based off of the design of code-only engines like
+Love2D, and the goal is to provide a solid base to develop anything with a
+similar philosophy on top.
+
+Uranium Template originally formed during the creation of a currently unreleased
+project, and v2 formed during the creation of the [Mod Jam Kusoge lobby](https://www.youtube.com/watch?v=CSJ_pimhrYA).
+Since then I've refined and polished it up to be usable on its own. Most of the
+design decisions came from experience using prototype versions of it!
+
+<b style="font-size: 42px">TODO this is super unupdated for v2</b>
 
 - [Installation](#installation)
 - [Distribution](#distribution)
@@ -155,7 +164,7 @@ Installation is the exact same as any other NotITG template:
 
 ## Distribution
 
-After you're done with writing your file, be sure to take these steps to reduce the filesize and get your game ready for zipping up!
+After you're done with writing your file, be sure to take these steps to reduce the filesize and get your file ready for zipping up!
 
 - Remove `MANUAL.md`, `docs/`, `.vscode/`, `.gitconfig`, `.gitignore` and `template/typings.lua`. These are files that aren't necessary outside of a development environment!
 - Optionally, remove `Song.sm.auto` and `Song.sm.old`. These files may not exist depending on certain factors.
@@ -173,7 +182,7 @@ Afterwards, it should be safe to zip everything up and send it over!
 - [Define some actors](#defining-actors), and [call initialization methods on those actors](#initializing-actors) to set them up
 - [Define callbacks](#callback-usage), such as the [update](#updatedt-number) callback
 - [Require more files in](#requiring-files)! Splitting your code into neat little modules is always good practice.
-- Make use of the expansive [standard library](#standard-library), like the [vector](#vector2d) or [color](#color) classes
+- Make use of the [standard library](#standard-library)
 
 If you're still a bit clueless, why not check out the [Examples](#examples) section?
 
