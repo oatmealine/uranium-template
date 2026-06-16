@@ -1,6 +1,5 @@
-<sub>
-If you're viewing this in VSCode, it's recommended that you open it in a preview with `Ctrl+Shift+V`!
-</sub>
+<sub> If you're viewing this in VSCode, it's recommended that you open it in a
+preview with `Ctrl+Shift+V`! </sub>
 
 <br>
 
@@ -158,332 +157,56 @@ Installation is the exact same as any other NotITG template:
 
 0. Get the latest template version from [the Gitea releases page](https://git.oat.zone/oat/uranium-template/releases)
 1. Unzip your installation zip, as you would a modfile
-2. Edit `Song.sm` in your editor of choice (ArrowVortex, NotITG) to include necessary metadata; replace `silence.ogg` with an actual track, if necessary
-3. Edit `main.lua` to do whatever you wish to do with it! The entirety of the `src/` folder is yours!
-4. _(Recommended)_ Install [sumneko's Lua LSP](https://marketplace.visualstudio.com/items?itemName=sumneko.lua) and grab the latest NotITG typings [here](https://gitlab.com/CraftedCart/notitg_docs/-/archive/master/notitg_docs-master.zip?path=lua) (put them in a folder like `.typings`!)
+2. Edit `Song.sm` in your editor of choice (ArrowVortex, NotITG, Notepad, ...)
+to include necessary metadata; replace `silence.ogg` with an actual track, if
+necessary
+3. Edit `main.lua` to do whatever you wish to do with it! The entirety of the
+`src/` folder is yours!
+4. _(Recommended)_ Install [LuaLS](https://luals.github.io/#install)
+([VSCode](https://marketplace.visualstudio.com/items?itemName=sumneko.lua),
+[JetBrains IDEs](https://plugins.jetbrains.com/plugin/22315-sumnekolua)) and
+grab the latest NotITG typings from
+[here](https://gitlab.com/CraftedCart/notitg_docs/-/archive/master/notitg_docs-master.zip?path=lua)
+(put them in a folder like `.typings`!). Uranium comes with typings for its own
+libraries and modules, which work best when NotITG typings are also available to
+the language server.
 
 ## Distribution
 
-After you're done with writing your file, be sure to take these steps to reduce the filesize and get your file ready for zipping up!
+After you're done with writing your file, be sure to take these steps to reduce
+the filesize and get your file ready for zipping up!
 
-- Remove `MANUAL.md`, `docs/`, `.vscode/`, `.gitconfig`, `.gitignore` and `template/typings.lua`. These are files that aren't necessary outside of a development environment!
-- Optionally, remove `Song.sm.auto` and `Song.sm.old`. These files may not exist depending on certain factors.
-- If you've followed step 4 during [Installation](#installation), be sure to remove your typings folder (likely `.typings`)
+- Remove `distribute-file.sh`, `MANUAL.md`, `docs/`, `.vscode/`, `.gitconfig`
+and `.gitignore`. These are files that aren't necessary outside of a development environment!
+- Remove `Song.sm.auto` and `Song.sm.old` if your chart editor left
+them over from an earlier edit.
+- If you've added NotITG typings during installation, be sure to remove your 
+typings folder (likely `.typings`)
 - If you're using Git, **PLEASE REMOVE YOUR `.git/` FOLDER!!!**
 
-If you're on Linux or have MSYS2/WSL/similar installed, you can use the [distribution script](distribute-file.sh).
+If you're on Linux or have MSYS2/WSL/similar installed, you can use the
+[distribution script](distribute-file.sh).
 
 Afterwards, it should be safe to zip everything up and send it over!
 
 ## How do I start writing code?
 
-`main.lua` is the entry-point for your code! From there, you can do the following:
-
-- [Define some actors](#defining-actors), and [call initialization methods on those actors](#initializing-actors) to set them up
-- [Define callbacks](#callback-usage), such as the [update](#updatedt-number) callback
-- [Require more files in](#requiring-files)! Splitting your code into neat little modules is always good practice.
-- Make use of the [standard library](#standard-library)
-
-If you're still a bit clueless, why not check out the [Examples](#examples) section?
-
-## Defining actors
-
-Actors are defined in Uranium Template before any other callback runs, and are defined by a single function of their type:
-
-```lua
-local quad = Quad()
-local sprite = Sprite('file/location.png')
-local text = BitmapText('common', 'hello, world!')
-```
-
-All actors that take in filenames have their filenames starting from the root of the project; meaning if you had a file in `myModFile/src/test.png`, you'd have to pass in a filename of `src/test.png`. **If an image is blank, or a single pink pixel, it hasn't loaded properly.**
-
-### Initializing actors
-
-Once you have an actor defined, you can run whatever methods you want.
-
-> **Note**
-> Even though you get a fully functional actor, what you actually get is a _proxied actor_! What this means for you is that you really shouldn't call any getters on the actor, as it'll just return `nil`.
-
-```lua
-local text = BitmapText('common', 'hello, world!')
-text:xy(scx, scy)
-text:zoom(2.3)
-text:rotationz(30)
-text:diffuse(1, 0.8, 0.8, 1)
-```
-
-All methods that you run upon definition will be ran again at the start of every frame with `uranium.config.resetOnFrameStart`:
-
-```lua
-uranium.config.resetOnFrameStart(true)
-
-local quad = Quad()
-quad:xy(scx, scy)
-quad:zoomto(60, 60)
-quad:diffusealpha(1)
-
-uranium.on('update',
-  -- doesn't need a reset! it'll automatically zoomto 60, 60 and set its alpha to 1
-  quad:Draw()
-  quad:zoomto(120, 120)
-  quad:diffusealpha(0.5)
-  quad:Draw()
-end)
-```
-
-If you want to avoid this for individual actors, or otherwise call getter methods, use the [`init`](#init) callback:
-
-```lua
-local sprite = Sprite()
-
-uranium.on('init', function()
-  someTexture = sprite:GetTexture()
-end)
-```
-
-Alternatively, you can also use the actors' individual `InitCommand`s:
-```lua
-local sprite = Sprite()
-sprite:addcommand('Init', function(self)
-  someTexture = self:GetTexture()
-end)
-```
-
-Or, you can disable the frame resetting functionality individually:
-```lua
-uranium.config.resetOnFrameStart(true)
-local sprite = Sprite()
-uranium.config.resetActorOnFrameStart(sprite, false)
-sprite:Draw() -- will not be called per-frame
-```
-
-### Accessing raw actors
-
-As you may have noticed, when you print an actor defined with Uranium, it won't show up as an actor - it'll show up as a "proxy" of an actor. This is because we can't actually get actors created on demand in NotITG - what happens instead is you get an object that _acts_ like an actor by calling all the same methods you pass into it, but isn't really one.
-
-```lua
-local q = Quad()
-print(q) --> 'Proxy of Quad'
-```
-
-Typically, this doesn't matter; however, in certain contexts, it may be required for you to get the raw actor from a proxy actor. You can do this by accessing `__raw` on the actor - this is defined on all actors and is only available _post-initialization_.
-
-```lua
-local q = Quad()
-print(q.__raw) --> nil
-q:addcommand('Init', function()
-  print(q.__raw) --> 'Sprite (168F7F78)'
-end)
-```
-
-For most things that require this, there exist simple abstractions - applying shaders has `setShader`, `setShaderfuck`, etc., however in rare circumstances this may be useful. _Please let me know if there's a use-case that I haven't accounted for!_
-
-### Actor-specific notes
-
-#### `ActorFrameTexture`
-
-AFTs work in the same way as usual AFTs do in terms of ordering: they capture everything that was drawn to the screen before them:
-
-```lua
-quad:Draw() -- will be drawn to the AFT
-
-aft:Draw()
-
-sprite:Draw() -- will not be drawn to the AFT
-```
-
-See [the AFT example](#afts) for a quick setup to play around with, or the example in the [aft library](#aft) for a barebones setup. The ability to dynamically adjust at which point in the stack they render makes them _a lot_ more powerful than you'd expect.
-
-#### `ActorFrame`
-
-To create an `ActorFrame`, first define it as a proper actor:
-
-```lua
-local af = ActorFrame()
-```
-
-Then, for all children that you want to put into the `ActorFrame`, run `addChild`:
-
-```lua
-local quad = Quad()
-addChild(af, quad)
-local sprite = Sprite()
-addChild(af, sprite)
-```
-
-**This will mess up rendering for those actors!** This is because all actors that are outside the _root_ `ActorFrame` of the template would be unaffected with the frame's transformations if they're drawn outside of their respective DrawFunctions. You'd want to then create a setup similar to this:
-
-```lua
-setDrawFunction(af, function() -- necessary to call this instead of af.SetDrawFunction for template internals reasons
-  quad:Draw()
-  sprite:Draw()
-end)
-
-uranium.on('update', function()
-  af:Draw() -- would draw quad and sprite
-end)
-```
-
-**Nested AFs are supported.** As with all complicated things in this template, check out the [`ActorFrame` example](#simple-actorframe-setup) for a simple working setup.
-
-An additional extra feature Uranium Template adds to assist with rendering multiple instances is the ability to pass in arguments through `Draw()`:
-
-```lua
-setDrawFunction(af, function(x, y)
-  quad:xy(x, y)
-  quad:Draw()
-end)
-
-uranium.on('update', function()
-  for x = 0, 3 do
-    for y = 0, 3 do
-      af:Draw(x, y)
-    end
-  end
-end)
-```
-
-#### `ActorScroller`
-
-`ActorFrame` already has an extremely, _extremely_ complicated setup powering it in the back-end; and `ActorScroller` is way too niche for me to give it the same treatment. Sorry!
-
-#### `BitmapText`
-
-If you want to specify theme-provided fonts, that's easy enough:
-
-```lua
-local text1 = BitmapText(nil, 'test') -- defaults to 'common'
-local text2 = BitmapText('_wendy white', 'test')
-local text3 = BitmapText('_misobold white', 'test')
-```
-
-However, providing custom fonts is a bit tedious due to a [vanilla bug](https://discord.com/channels/227650173256466432/666629297544495124/1023573412028891177) that's annoying to work around. In order to specify a custom font, consider the _root path_ to be in `template/`. For example, if you want to load a font from your `src/` folder, you'd do:
-
-```lua
-local text = BitmapText('../src/_inter v 22px.ini', 'test')
-```
-
-#### Textures
-
-For convinience, `Texture` is a function that will give you a `RageTexture` from a filename without the actor. Equivalent to:
-
-```lua
-local sprite = Sprite('filename.png')
-sprite:hidden(1)
-local texture = sprite:GetTexture()
-return texture
-```
-
-### Shaders
-
-Shaders cannot be manually defined on actors [due to a technical limitation](https://discord.com/channels/227650173256466432/666629297544495124/1022119161415077909); plus, it wouldn't make much sense to integrate them in the same way that NotITG integrates shaders with the current XML behavior. In order to give an actor a shader, you need to define them seperately:
-
-```lua
-local sprite = Sprite('docs/uranium.png')
-local shader = Shader('src/shader.frag') -- returns a RageShaderProgram
-```
-
-Afterwards, call `setShader` on your actor. You can call this outside of `init`, if you like.
-
-```lua
-setShader(actor, shader)
--- or
-setShaderfuck(shader)
--- (don't forget to clearShaderfuck())
-```
-
-If you prefer, you can also inline shader code, as long as you don't mix files with inlined code in the same shader:
-
-```lua
-local shader = Shader([[
-  #version 120
-
-  void main() {
-    gl_FragColor = vec4(0.420, 0.69, 1.0, 1.0);
-  }
-]])
-```
-
-Defining vertex shaders is done the same way, except with the second argument instead:
-
-```lua
-local shader = Shader('src/shader.frag', 'src/shader.vert')
-```
-
-To define a vertex shader and nothing else, you'll need to omit the fragment shader and put a `nil` in its place:
-
-```lua
-local shader = Shader(nil, 'src/shader.vert')
-```
-
-And last, if you want a no-op shader, you can just do a simple:
-```lua
-local noopShader = Shader()
-```
-
-Check [the shader example](#shader-test) if you just want something to play around with.
-
-## Callback usage
-
-Callbacks are defined with `uranium.on`:
-
-```lua
-uranium.on('update', function(dt)
-  -- runs every frame
-end)
-```
-
-You can do this as many times as you like - it'll call every single function that's defined as `update`, not just the last!
-
-If you return a non-falsy value in a callback, however, it'll cancel every other callback after it. This can be useful for, eg. capturing inputs and ensuring they don't get passed through to other callbacks on accident.
-
-### Default callbacks
-
-These are the callbacks that are built into Uranium:
-
-#### `update(dt: number)`
-Called every frame. `dt` is the time passed since the last frame, the "deltatime".
-
-#### `init()`
-Called once on `OnCommand`. Every actor has been created, and the game should be starting shortly.
-
-#### `ready()`
-Fired on the first tick. A later version of `init()` where more things should be safe to use.
-
-#### `exit()`
-_Should_ call when the player exits the file. **Not properly tested yet.**
-
-#### `focus(hasFocus: boolean)`
-Called whenever the window loses/gains focus. You can use this to reduce render quality on alt-tab.
-
-### Custom callbacks
-
-Custom callbacks require no extra setup. Define your callback like usual:
-
-```lua
-uranium.on('somethingHappened', function(value)
-  -- ...
-end)
-```
-
-Then all you need to do to call it is:
-
-```lua
-uranium.call('somethingHappened', extra, values, go, here)
-```
-
-Callbacks support as many extra values as Lua supports arguments in a function - so let's just say you won't be running out of them any time soon.
+`src/main.lua` is the entry-point for your code! From there, you can do anything
+you'd like to do with the modfile.
+
+If you're still a bit clueless, why not check out the [Examples](#examples)
+section?
 
 ## Requiring files
 
-`require` in Uranium works a lot like Lua's vanilla `require`, and is a direct copy of Mirin's `require`.
+`require` in Uranium works a lot like Lua's vanilla `require`, and is a direct
+copy of Mirin's `require`.
 
 Say you have a file structure like this:
 
 `src/main.lua`
 ```lua
-local value = require('test')
+local value = require 'test'
 print(value)
 ```
 
@@ -494,293 +217,397 @@ return 'hello!'
 
 Your setup would print `'hello!'`.
 
-All [standard library](#standard-library) modules are required with `require`, see further notes in [**Importing modules**](#importing-modules).
+### Namespaces
 
-## Configuration
+Uranium has two default defined namespaces: `uranium` and `stdlib`. `uranium`
+holds interfaces to and from the template; this is what you'll pull in to define
+actors, listen to default events, and configure the template. `stdlib` is the
+Uranium standard library, holding various optional libraries you can pull in for
+personal ease of use.
 
-Uranium Template's base functionality can be configured using `uranium.config`. You can access the raw values by requiring `uranium.config`, but this is currently undocumented.
+### `package` module
 
-#### `uranium.config.resetOnFrameStart(bool: boolean)`
+Uranium also includes a `package` module as a global. It implements a subset of
+the methods/fields that Lua's default `package` module provides. It provides one
+extra field, `base`, which is a shorthand for
+`GAMESTATE:GetCurrentSong():GetSongDir()`.
 
-Toggle actor resetting on frame start behavior by default. _(Default: `false`)_
+## Defining actors
 
-#### `uranium.config.resetActorOnFrameStart(actor: Actor, bool: boolean?)`
-
-Toggle actor resetting on frame start for individual actors. `bool` defaults to the opposite of your `resetOnFrameStart` config.
-
-#### `uranium.config.hideThemeActors(bool: boolean)`
-
-Toggle if theme actors (lifebars, scores, song names, etc.) are hidden. Must be toggled **before** `init`. _(Default: `true`)_
-
-## Standard library
-
-The Uranium Template standard library is split up into a few convinient modules. This section aims to comprehensively document them all.
-
-### Importing modules
-
-You can import a module like so:
+Actors are defined in Uranium Template before any other callback runs, and are
+defined by functions under a `Context`:
 
 ```lua
-require('stdlib.vector2D')
+local uranium = require 'uranium'
+local ctx = uranium.ctx
 
--- can use vector() here
+local quad = ctx:Quad()
+local sprite = ctx:Sprite('file/location.png')
+local text = ctx:BitmapText('common', 'hello, world!')
 ```
 
-Some modules won't export any globals, and therefore need to be loaded like so:
+For convenience purposes, you may define `ctx` as a global to avoid redefining
+it in every newly required module. Every example from here on out will assume
+`ctx` is defined as such:
 
 ```lua
-uwuify = require('stdlib.uwuify')
-print(uwuify('hello!'))
+ctx = require('uranium').ctx
 ```
 
-These modules have a label near their header in this manual reading _"Exports globals"_.
-
-### `vector2D`
-
-_Exports globals_
-
-`vector2D` is a simple 2D vector class system. For example, to define a vector:
-```lua
-local vec = vector2D(0, 0)
--- or
-local vec = vector(0, 0)
--- or
-local vec = vector(0)
--- or
-local vec = vector()
-```
-
-Then add another vector to it:
-```lua
-vec = vec + vector(1)
-print(vec) --> (1, 1)
-```
-
-Then measure its length:
-```lua
-local len = vec:length()
-print(len) --> 1.4142135623730951
-           --  (sqrt of 2)
-```
-
-Then rotate it and index it:
-```lua
-vec:rotate(180)
-
-local x = vec.x
--- or
-local x = vec[1]
-
-print(x) --> -1
-```
-
-#### `vector2D(x: number | nil, y: number | nil): vector2D`
-
-Creates a new vector. If only `x` is passed in, `y` = `x`. If no arguments are passed, `x` = `y` = `0`.
-
-#### `vectorFromAngle(ang: number | nil, amp: number | nil): vector2D`
-
-Creates a new vector pointing in a specific angle. **Specify `ang` in degrees.** `ang` defaults to 0, `amp` defaults to 1.
-
-#### `vector2D:length(): number`
-
-Returns the vector's length. Equal to `vector:distance(vector())`.
-
-#### `vector2D:lengthSquared(): number`
-
-Returns the vector's length, squared. Here mainly for optimization purposes; this is a cheaper version of [`length()`](#vectorlength-number) that's less accurate.
-
-#### `vector2D:angle(): number`
-
-Returns the vector's angle in degrees.
-
-#### `vector2D:rotate(ang: number): vector2D`
-
-Rotates the vector, setting its angle but keeping its length. _Angle is provided in degrees._
-
-#### `vector2D:normalize(): vector2D`
-
-Normalizes the vector, setting its length to 1 but keeping its angle. Equal to `vector:resize(1)`
-
-#### `vector2D:resize(length: number): vector2D`
-
-Resizes the vector, setting its length but keeping its angle.
-
-#### `vector2D:unpack(): number, number`
-
-Unpacks the vector into its X and Y coordinates. Useful for quickly unpacking it into a function call:
-```lua
-local quad = Quad()
-quad:xy(center:unpack())
-```
-
-#### `vector2D:distance(vect: vector2D): number`
-
-Gets the distance between one vector and another.
-
-#### `vector2D:distanceSquared(vect: vector2D): number`
-
-Gets the distance between one vector and another, squared. Here mainly for optimization purposes; this is a cheaper version of [`distance()`](#vectordistancevect-vector-number) that's less accurate.
-
-#### Operations
-
-Here are all valid operations for vectors:
-
-- `vector2D + number`: equal to `vector2D + vector2D(number)`
-- `vector2D + vector2D`: adds the vectors' X and Y coordinates together, respectively, forming a new vector
-- `vector2D - number`: equal to `vector2D - vector2D(number)`
-- `vector2D - vector2D`: subtracts the vectors' X and Y coordinates, respectively, forming a new vector
-- `vector2D * number`: equal to `vector2D * vector2D(number)`
-- `vector2D * vector2D`: multiplies the vectors' X and Y coordinates together, respectively, forming a new vector
-- `vector2D / number`: equal to `vector2D / vector2D(number)`
-- `vector2D / vector2D`: divides the vectors' X and Y coordinates, respectively, forming a new vector
-- `vector2D == vector2D`: checks if the two vectors' X and Y coordinates are equivalent; returns false with any other type
-- `-vector2D`: negates the X and Y coordinates of the vector
-
-### `color`
-
-_Exports globals_
-
-`color` is a simple wrapper around all things color-related.
-
-#### `rgb(r: number, g: number, b: number, a: number | nil): color`
-
-Constructs a new color using the `r`, `g`, `b` and `a` values. Assumes all values are contained in the set [0, 1]. `a` defaults to 1.
-
-#### `hsl(h: number, s: number, l: number, a: number | nil): color`
-
-Constructs a new color using the `h`, `s`, `l` and `a` values using the [HSL color model](https://en.wikipedia.org/wiki/HSL_and_HSV). Assumes all values are contained in the set [0, 1]. `a` defaults to 1; `h` wraps around.
-
-#### `hsv(h: number, s: number, v: number, a: number | nil): color`
-
-Constructs a new color using the `h`, `s`, `v` and `a` values using the [HSV color model](https://en.wikipedia.org/wiki/HSL_and_HSV). Assumes all values are contained in the set [0, 1]. `a` defaults to 1; `h` wraps around.
-
-#### `shsv(h: number, s: number, v: number, a: number | nil): color`
-
-Equal to [`hsv()`](#hsvh-number-s-number-v-number-a-number--nil), except the hue value is smoothed using cubic smoothing. Not accurate, but produces neater-looking color blends for rainbow-shifting colors.
+Defining actors during runtime (after `init`) is forbidden and will return in
+an error:
 
 ```lua
-local rainbow = shsv(t, 1, 0.5)
-```
-
-#### `hex(hex: string): color`
-
-Reads in a hex string and parses it into a `color`. Accepted hex string formats are `#ffffff`, `ffffff`, `#fff` and `fff`.
-
-#### `color:unpack(): number, number, number, number`
-
-Unpacks the color into its R, G, B and A values. Useful for `diffuse`:
-```lua
-local quad = Quad()
-quad:diffuse(col:unpack())
-```
-
-#### `color:rgb(): number, number, number`
-
-Returns the color's R, G and B values.
-
-#### `color:hsl(): number, number, number`
-
-Returns the color's H, S and L values in the [HSL color model](https://en.wikipedia.org/wiki/HSL_and_HSV).
-
-#### `color:hsv(): number, number, number`
-
-Returns the color's H, S and V values in the [HSV color model](https://en.wikipedia.org/wiki/HSL_and_HSV).
-
-#### `color:hex(): string`
-
-Returns the color's hex string representation in the format `ffffff`.
-
-#### `color:hue(h: number): color`
-
-Sets the color's hue value in the [HSL/HSV color model](https://en.wikipedia.org/wiki/HSL_and_HSV).
-
-#### `color:huesmooth(h: number): color`
-
-Equivalent to [`color:hue()`](#colorhueh-number-color), except the hue value is smoothed using cubic smoothing. Not accurate, but produces neater-looking color blends for rainbow-shifting colors.
-
-#### `color:alpha(a: number): color`
-
-Sets the color's alpha channel.
-
-#### `color:malpha(a: number): color`
-
-Sets the color's alpha channel, multiplying the previous value with `a`.
-
-#### `color:invert(): color`
-
-Inverts the color.
-
-#### `color:grayscale(): color`
-
-Makes the color grayscale using a more accurate formula than just multiplying every value by `0.5`.
-
-#### `color:hueshift(a: number): color`
-
-Shifts the color's hue by `a`.
-
-#### Operations
-
-Here are all valid operations for colors:
-
-- `color + number`: equal to `color + rgb(number, number, number)`
-- `color + color`: adds the colors' R, G and B values together, respectively, forming a new color
-- `color - number`: equal to `color - rgb(number, number, number)`
-- `color - color`: subtracts the colors' R, G and B values, respectively, forming a new color
-- `color * number`: equal to `color * rgb(number, number, number)`
-- `color * color`: multiplies the colors' R, G and B values together, respectively, forming a new color
-- `color / number`: equal to `color / rgb(number, number, number)`
-- `color / color`: divides the colors' R, G and B values, respectively, forming a new color
-- `color == color`: checks if the two colors' R, G and B values are equivalent; returns false with any other type
-
-### `easable`
-
-A simple way of making a number easable. See [this post](https://blog.oat.zone/the-easy-and-memorable-solution-to-easing/) for implementation details.
-
-```lua
-local easable = require('stdlib.easable')
-
-local n = easable(0)
-
--- each time you want to set it, call this instead
-n:set(value)
--- or
-n:add(value)
-
--- to avoid the ease, do this instead
-n:reset(value)
-
--- then, in your update function
-uranium.on('update', function(dt)
-  n:update(dt) -- multiply this image by some value to speed it up
-  print(n.eased) -- retrieve the eased value
-  print(n.target) -- retrieve the target value it's easing towards
+events:on('init', function()
+  local quad = ctx:Quad() -- actor235: attempting to modify actor queue while it is locked. did you call 'lock' too early?
 end)
 ```
 
-#### `easable(default: number): easable`
+All actors that take in filenames have their filenames starting from the root of
+the project; meaning if you had a file in `Songs/Modfile/src/test.png`, you'd
+have to pass in a filename of `src/test.png`. **If an image is blank, or a
+single pink pixel, it hasn't loaded properly.**
 
-Creates a new easable, setting the default to `default`. Can technically be anything that has `T * number`, `number - T` and `T + T` defined, including a `vector2D`.
+### Initializing actors
 
-#### `easable:set(new: number): void`
+Once you have an actor defined, you can run whatever methods you want to set
+initial values.
 
-Sets the target value (`target`) to `new`, easing the current value to the new value.
+```lua
+local text = ctx:BitmapText('common', 'hello, world!')
+text:xy(scx, scy)
+text:zoom(2.3)
+text:rotationz(30)
+text:diffuse(1, 0.8, 0.8, 1)
+```
 
-#### `easable:add(new: number): void`
+These will come into effect as soon as the actor is initialized; think of it as
+an `InitCommand`.
 
-Equivalent to `easable:add(easable.target + new)`.
+### A note on proxies
 
-#### `easable:reset(new: number): void`
+Even though what you may think you get a fully functional actor, what you
+actually get is a _proxied actor_ (not to be confused with NotITG's
+`ActorProxy`). Due to a quirk of NotITG, unlike what Uranium's initialization
+wrapping would have you believe, there is no method for creating actors during
+runtime. Instead, when a method under `ctx` is called, that actor is committed
+to the _actor queue_ that's then used after loading your `main.lua` to construct
+the actor tree.
 
-Sets the current (`eased`) and target (`target`) values to `new`, **not** easing the current value to the new value.
+What this means in practice is that the actors you get will not be real actors,
+but rather proxies:
 
-#### Operations
+```lua
+local quad = ctx:Quad()
+print(quad) --> Proxy of Quad (unresolved)
+```
 
-Every operation supported on the eased value is supported with an `easable`.
+The `(unresolved)` in this means that the real actor this proxy stands in for
+has yet to be created, so any getter calls for it will dummy out and return
+`nil`:
+
+```lua
+print(quad:GetX()) --> nil
+```
+
+However, after the `init` event, it will be filled in with its awaited actor:
+
+```lua
+events:on('init', function()
+  print(quad) --> Proxy of Sprite (0D42AC40)
+  print(quad:GetX()) --> 0
+end)
+```
+
+For convenience, defining an `InitCommand` with `addcommand` will also have the
+same behavior:
+
+```lua
+quad:addcommand('Init', function()
+  print(quad) --> Proxy of Sprite (0D42AC40)
+end)
+```
+
+As a consequence of Uranium actors being proxies and not native NotITG actors,
+you cannot pass them into native NotITG calls without first stripping the proxy.
+This can be done by requiring the `Proxy` class from `uranium.actors.proxy`:
+
+```lua
+local Proxy = require 'uranium.actors.proxy'
+
+local sprite = ctx:Sprite('src/assets/she.png')
+local sine = ctx:Shader('src/glsl/sine.frag')
+
+events:on('init', function()
+  sprite:SetShader(Proxy.getRaw(sine))
+end)
+```
+
+This should mainly be necessary only with the `Shader` and `Texture`
+initializers, however, as all other actors never really need to be passed into
+other functions.
+
+Not doing so will result in warnings, AVs or silent failures. For instance, with
+shaders, the following line is printed in the log, and the shader does not
+apply:
+
+```
+WARNING: LunaActor::SetShader(): The given shader is null!
+```
+
+#### Miscellaneous proxy notes
+
+The `Proxy` class mentioned above holds a few other more obscure utilities for
+working with proxied actors:
+
+- You can check if an actor is a native NotITG class or a proxied actor with
+`isProxy`:
+
+  ```lua
+  local quad = ctx:Quad()
+  Proxy.isProxy(quad) --> true
+  Proxy.isProxy(SCREENMAN:GetTopScreen()) --> false
+  ```
+- If you want to store data on a `Proxy`, you can make use of Uranium's internal
+data store:
+
+  ```lua
+  Proxy.setData(quad, 'foo', 'bar')
+  Proxy.getData(quad, 'foo') --> 'bar'
+  ```
+
+  Do note that Uranium will also use this store for certain behavior, which will
+use the same context as your own data.
+
+### Actor-specific notes
+
+#### `ActorFrameTexture`
+
+AFTs in Uranium work in the same way as usual AFTs: they capture everything that
+was drawn to the screen before them. However, this also translates quite
+directly to the recommended DrawFunction workflow:
+
+```lua
+quad:Draw() -- will be drawn to the AFT
+
+aft:Draw()
+
+sprite:Draw() -- will not be drawn to the AFT
+```
+
+In this case, the definition order of the actor does not matter, and you can
+dynamically swap the `Draw` call order as you wish.
+
+See [the AFT example](#afts) for a quick setup to play around with, or the
+example in the [`aft` library](#aft) for a barebones setup.
+
+#### `ActorFrame`
+
+To create an `ActorFrame`, first define it as a regular actor, then create a
+_sub-context_ from it:
+
+TODO move context to its own module
+
+```lua
+local Context = require('uranium.actors').Context
+
+local af = ctx:ActorFrame()
+local subCtx = Context.getContext(af)
+```
+
+Any actors created under that sub-context will be nested into the ActorFrame:
+
+```lua
+local quad = subCtx:Quad()
+
+local subAf = subCtx:ActorFrame()
+local subSubCtx = Context.getContext(subAf)
+local deeplyNestedQuad = subSubCtx:Quad()
+```
+
+#### `ActorScroller`
+
+`ActorScroller`s are current unsupported. I don't know if they ever will be.
+
+#### `BitmapText`
+
+TODO fix and document absolute/relative font paths
+
+### Textures
+
+For convinience, `Texture` is a function that will give you a `RageTexture` from
+a filename without the actor. Equivalent to:
+
+```lua
+local sprite = ctx:Sprite('filename.png')
+sprite:hidden(1)
+local texture = sprite:GetTexture()
+return texture
+```
+
+### Shaders
+
+In Uranium, shaders are defined entirely seperately from actors, and then
+assigned onto the actors afterwards.
+
+```lua
+local sprite = ctx:Sprite('src/assets/she.png')
+local sine = ctx:Shader('src/glsl/sine.frag')
+
+events:on('init', function()
+  sprite:SetShader(Proxy.getRaw(sine))
+end)
+```
+
+Defining vertex shaders is done the same way, except with the second argument
+instead:
+
+```lua
+local shader = ctx:Shader('src/shader.frag', 'src/shader.vert')
+```
+
+To define a vertex shader and nothing else, you'll need to omit the fragment
+shader and put a `nil` in its place:
+
+```lua
+local shader = ctx:Shader(nil, 'src/shader.vert')
+```
+
+If you prefer, you can also inline shader code, as long as you don't mix files
+with inlined code in the same shader set:
+
+```lua
+local shader = ctx:Shader([[
+  #version 120
+
+  void main() {
+    gl_FragColor = vec4(0.420, 0.69, 1.0, 1.0);
+  }
+]])
+```
+
+And last, if you want a no-op shader, you can just do a simple argumentless
+call:
+
+```lua
+local noopShader = ctx:Shader()
+```
+
+Check [the shader example](#shader-test) if you just want something to play
+around with.
+
+## Callback usage
+
+Callbacks are defined with the `uranium.events` module:
+
+```lua
+local events = require 'uranium.events'
+
+events:on('update', function()
+  -- updates every frame
+end)
+```
+
+Callbacks are ran in order of definition. Because this is rather finnicky, in
+situations where you're expected to pay attention to execution order of even
+callbacks, it's recommended to build your own execution order on top of a single
+callback:
+
+```lua
+events:on('update', function()
+  if isMenuOpen() return end
+  runPreUpdate()
+  runUpdate()
+  runPostUpdate()
+end)
+```
+
+If you return a value in a callback, it'll cancel every other callback after it.
+This can be useful for, eg. capturing inputs and ensuring they don't get passed
+through to other callbacks on accident. The value will then be returned to the
+callback caller.
+
+### Default callbacks
+
+These are the callbacks that are built into Uranium:
+
+#### `update(dt: number)`
+Called every frame. `dt` is the time passed since the last frame, the
+"deltatime".
+
+#### `init()`
+Called once on `OnCommand`. Every actor has been created, and the game should be
+starting shortly.
+
+#### `ready()`
+Fired on the first tick. A later version of `init()` where more things should be
+safe to use; for instance, players are safe to be referenced here.
+
+#### `exit()`
+_Should_ call when the player exits the file. **This is an incredibly
+inconsistent and hacky event**, and you should never be relying on it.
+
+#### `focus(hasFocus: boolean)`
+Called whenever the window loses/gains focus. Convenient event shim for the
+`WindowFocus` and `WindowFocusLost` commmands.
+
+### Custom callbacks
+
+Custom callbacks require no extra setup. Define your callback like usual:
+
+```lua
+events:on('somethingHappened', function(value)
+  -- ...
+end)
+```
+
+Then all you need to do to call it is:
+
+```lua
+events:call('somethingHappened', value)
+```
+
+Callbacks support variable arguments, so you can put in as many arguments in as
+you like.
+
+### Advanced usage
+
+Uranium's event system uses the [`EventHandler`](#eventhandler) class, which you
+can check the documentation of for further usage notes.
+
+## Configuration
+
+Uranium Template's base functionality can be configured using `uranium.config`:
+
+```lua
+local config = require 'uranium.config'
+config.hideThemeActors = false
+```
+
+#### `hideThemeActors: boolean`
+
+Toggle if theme actors (lifebars, scores, song names, etc.) are hidden. Must be
+toggled **before** `init`. _(Default: `true`)_
+
+## Standard library
+
+The Uranium Template standard library is split up into several modules. This
+section aims to comprehensively document them all.
+
+> [!NOTE]
+> Several of Uranium's default modules have disappeared since v2. The
+> reason being that maintaining them in Uranium felt rather pointless, and I'd
+> rather users make the choice for most of those libraries anyways.
+>
+> They can still be found in [my personal Lua module
+> repo](https://github.com/oatmealine/jadelib), although with less
+> documentation and support.
+
+TODO update with v2 modules
 
 ### `input`
 
-_Defines callbacks_
+TODO update with v2 and finalize changes
 
 `input` is the library that handles everything input-related. Its main feature is providing the `press` and `release` callbacks, but you can also access the raw inputs with the `inputs` table (each value is `-1` if the key is not pressed and the time at which it was pressed, estimated with `t` if it is pressed) and the _raw_ inputs (ignoring callback returns) with `rawInputs`.
 
@@ -890,17 +717,10 @@ local special = keyboard.special
 local isDebugKeyAndShiftHeld = isDebugKeyHeld and special.shift
 ```
 
-### `bitop`
-
-A Lua 5.0 port of [bitop-lua](https://github.com/AlberTajuelo/bitop-lua). See their repository for documentation.
-
-```lua
-local bitop = require('stdlib.bitop')
-```
-
 ### `scheduler`
 
-_Defines callbacks_
+TODO update with v2 changes
+also maybe switch this to another scheduler
 
 A simple scheduler.
 
@@ -926,36 +746,26 @@ Unschedules a function in ticks. Use the index returned to you when originally s
 
 ### `binser`
 
-A NITG port of [binser](https://github.com/bakpakin/binser). Used for [savedata](#savedata) serialization.
-
-```lua
-local binser = require('stdlib.binser')
-
-local mydata = binser.serialize(45, {4, 8, 12, 16}, 'Hello, World!')
-
-print(binser.deserializeN(mydata, 3))
--- 45	table: 0x7fa60054bdb0	Hello, World!
-```
-
-If you want to serialize custom types using the savedata module, check binser's [Custom types](https://github.com/bakpakin/binser#custom-types) section.
+A NotITG Lua port of [binser](https://github.com/bakpakin/binser). Used for
+[savedata](#savedata) serialization.
 
 ### `mirin`
 
-_Defines callbacks_
-
 _Exports globals_
 
-A copy of the [Mirin Template by XeroOl](https://github.com/XeroOl/notitg-mirin/) (currently at 5.0.1), shoved in and ported for your convinience. Works exactly the same as regular Mirin.
-
-#### A note about `reset`
-
-Both Uranium Template and Mirin Template contain the global `reset` - Mirin Template uses it for mod resetting, while Uranium Template uses it for actor resetting. To avoid this collision, Uranium's `reset` has an alias called `resetActor`; Mirin will, by default, overwrite the usual `reset`. There's currently no way to change this.
+A copy of the [Mirin Template by
+XeroOl](https://github.com/XeroOl/notitg-mirin/) (currently at 5.0.1), shoved in
+and ported for your convinience. Works exactly the same as regular Mirin.
 
 ### `savedata`
 
+TODO update with and finalize v2 changes
+
 _Defines callbacks_
 
-A complete library for saving and loading arbitrary data to the user's profile. Uses [binser](#binser) for serialization. See [Savedata example](#savedata-example) for an example of how to use this library.
+A complete library for saving and loading arbitrary data to the user's profile.
+Uses [binser](#binser) for serialization. See [Savedata
+example](#savedata-example) for an example of how to use this library.
 
 #### `savedata.initializeModule(name: string, forceIgnore: boolean): void`
 
@@ -963,17 +773,25 @@ Initializes the savedata module. `forceIgnore` makes the function ignore name ch
 
 ##### Generating a savedata name
 
-Ideally, you'd generate a savedata name by [generating a random 16-character string](https://www.random.org/strings/?num=1&len=16&digits=on&upperalpha=on&loweralpha=on&unique=on&format=plain&rnd=new) and appending it to your game's name. For instance:
+Ideally, you'd generate a savedata name by [generating a random 16-character
+string](https://www.random.org/strings/?num=1&len=16&digits=on&upperalpha=on&loweralpha=on&unique=on&format=plain&rnd=new)
+and appending it to your game's name. For instance:
 
 ```lua
 savedata.initializeModule('myGameName_doAmaUOBIjiaSWyz')
 ```
 
-The reason this is done is to avoid name collision - all modfiles share a global profile namespace to put their saved data in. To prevent it as much as possible, I've decided to force the user to generate a unique name that _most likely_ won't be taken by anything else. `forceIgnore` completely ignores the 16-character and special/normal character checks.
+The reason this is done is to avoid name collision - all modfiles share a global
+profile namespace to put their saved data in. To prevent it as much as possible,
+I've decided to force the user to generate a unique name that _most likely_
+won't be taken by anything else. `forceIgnore` completely ignores the
+16-character and special/normal character checks.
 
 #### `savedata.s(data: table, name: string | nil): void`
 
-Creates a new module in your savedata. It uses `data` for defaults, then uses it for writing savedata to it and reading savedata from it; for instance, this would be correct usage:
+Creates a new module in your savedata. It uses `data` for defaults, then uses it
+for writing savedata to it and reading savedata from it; for instance, this
+would be correct usage:
 
 ```lua
 local counter = {
@@ -991,23 +809,37 @@ uranium.on('update', function()
 end)
 ```
 
-By default, the name that's used for your module will be the folder your Lua file is located in, followed by its filename. **This means you should not rely on the automatic name generation if your Lua file rests at the root of your file or if you're calling this function via `loadstring` or similar** as it will create unpredictable module names that will change between setups and sometimes even game restarts. You can pass in any string you like to `name`, as long as it's unique in your project, to override this behavior.
+By default, the name that's used for your module will be the folder your Lua
+file is located in, followed by its filename. **This means you should not rely
+on the automatic name generation if your Lua file rests at the root of your file
+or if you're calling this function via `loadstring` or similar** as it will
+create unpredictable module names that will change between setups and sometimes
+even game restarts. You can pass in any string you like to `name`, as long as
+it's unique in your project, to override this behavior.
 
 #### `savedata.save(instant: boolean): void`
 
-Saves the savedata onto the user's profile. It waits a single tick to do so and sets the boolean `saveNextFrame` to `true`; this is so that your game can display a loading frame for the temporary lagspike, as chances are, on lower-end setups with hard drives, this will momentarily freeze the game as it writes the profile. You can make it instantly save with `instant`.
+Saves the savedata onto the user's profile. It waits a single tick to do so and
+sets the boolean `saveNextFrame` to `true`; this is so that your game can
+display a loading frame for the temporary lagspike, as chances are, on lower-end
+setups with hard drives, this will momentarily freeze the game as it writes the
+profile. You can make it instantly save with `instant`.
 
 #### `savedata.load(): void`
 
-Loads the savedata. _Shouldn't be called manually; this is automatically called on [`init()`](#init)._
+Loads the savedata. _Shouldn't be called manually; this is automatically called
+on [`init()`](#init)._
 
 #### `savedata.getLastSave(): string[] | nil`
 
-Gets the last save time that persists between game restarts in the format `{hour, minute, date, month, year}`. If the game has not saved once, returns `nil`.
+Gets the last save time that persists between game restarts in the format
+`{hour, minute, date, month, year}`. If the game has not saved once, returns
+`nil`.
 
 #### `savedata.enableAutosave(): void`
 
-Enables autosave via [`exit()`](#exit). Should hopefully mean data should never get lost.
+Enables autosave via [`exit()`](#exit). Should hopefully mean data should never
+get lost.
 
 ### `env`
 
@@ -1021,62 +853,19 @@ Is `true` if the file is being played in the editor. Useful for debugging stuff.
 
 Is `true` if the player is playing NotITG through Wine or similar.
 
-### `rng`
-
-A xoshiro128** reimplementation in Lua.
-
-#### `rng.init(seed: number[] | nil): rng`
-
-Initializes a new RNG class. `seed` must be a table of size 4; if it is not provided, `os.time()` is used in its place. _(Not `os.clock()`!!! Two RNG values created at the same time with no provided seed will be the same.)_
-
-#### `rng(a: number | nil, b: number | nil): number`
-
-Acts identical to `math.random()`. Pass in no arguments to get a random float from 0 to 1, pass in one argument to get a random inclusive integer from 1 to `a`, pass in two arguments to get a random integer from `a` to `b`.
-
-#### `rng:int(min: number, max: number | nil): number`
-
-Generates an inclusive random integer. Pass in one argument to get a random integer from 1 to `a`, pass in two arguments to get a random integer from `a` to `b`.
-
-#### `rng:float(max: number | nil): number`
-
-Generates a random fractional number from `0` to `max`. `max` defaults to 1.
-
-#### `rng:bool(): boolean`
-
-Generates either a `true` or a `false` randomly.
-
-#### `rng:seed(seed: number): void`
-
-Sets the seed and advances the state.
-
-#### `rng:next(): number`
-
-Gets the next pseudo-random value. Recommended to use [`int`](#rngintmin-number-max-number-number), [`float`](#rngfloatmax-number--nil-number), etc. over this.
-
-#### `rng:jump(): void`
-
-The jump function:
-
-> This is the jump function for the generator. It is equivalent
-> to 2^64 calls to next(); it can be used to generate 2^64
-> non-overlapping subsequences for parallel computations.
-
-#### `rng:longJump(): void`
-
-The long-jump function:
-
-> This is the long-jump function for the generator. It is equivalent to
-> 2^96 calls to next(); it can be used to generate 2^32 starting points,
-> from each of which jump() will generate 2^32 non-overlapping
-> subsequences for parallel distributed computations.
-
 ### `ease`
 
 _Exports globals_
 
-A direct copy of [Mirin Template's `ease.lua`](https://github.com/XeroOl/notitg-mirin/blob/master/template/ease.lua), for convinience. See the docs for those [**here**](https://xerool.github.io/notitg-mirin/docs/eases.html).
+A direct copy of [Mirin Template's
+`ease.lua`](https://github.com/XeroOl/notitg-mirin/blob/master/template/ease.lua),
+for convinience. See the docs for those
+[**here**](https://xerool.github.io/notitg-mirin/docs/eases.html).
 
 ### `players`
+
+TODO update with and finalize v2 changes
+also say this shouldn't go outside `ready`
 
 _Exports globals_
 
@@ -1088,23 +877,24 @@ P1:hidden(1)
 P2:hidden(1)
 ```
 
-### `profiler`
-
-_Defines callbacks_
-
-A simple profiler for Uranium Template's callback system. Require it and it'll display in the left-top corner of your screen, showing what callback functions are taking the longest to run.
-
 ### `util`
+
+TODO murder kill
 
 _Exports globals_
 
-A big ol' module that holds a bunch of useful functions. These were too specific or too niche to go in any singular module; so they're all here now.
+A big ol' module that holds a bunch of useful functions. These were too specific
+or too niche to go in any singular module; so they're all here now.
 
-There's _a bit too many_ functions to document, so I'd recommend just looking through the source code. I promise it doesn't bite.
+There's _a bit too many_ functions to document, so I'd recommend just looking
+through the source code. I promise it doesn't bite.
 
 ### `aft`
 
-An AFT setup library. Sets up sprites and AFTs with `sprite` and `aft`, or all-in-one with `aftSetup`, making them ready for texturing use.
+TODO update with and finalize v2 changes
+
+An AFT setup library. Sets up sprites and AFTs with `sprite` and `aft`, or
+all-in-one with `aftSetup`, making them ready for texturing use.
 
 ```lua
 local aftlib = require('stdlib.aft')
@@ -1113,32 +903,22 @@ local aftlib = require('stdlib.aft')
 local aft, aftSprite = aftlib.aftSetup()
 ```
 
-### `noautoplay`
-
-A single function which can be called before `ready()` to disable autoplay for the duration of the file if the player has it on. ***Not tested.***
-
-```lua
-require('stdlib.noautoplay')()
-```
-
 ### `eternalfile`
 
-A single function which turns your file into an eternal, neverending file, until the player puts it out of its misery by exiting. The current beat will always go from 0 to 1 and start over once this is enabled. This also sets the notedata to nothing to avoid hitting padding mines.
+TODO rec to put this in `ready`
+
+A single function which turns your file into an eternal, neverending file, until
+the player puts it out of its misery by exiting. The current beat will always go
+from 0 to 1 and start over once this is enabled. This also sets the notedata to
+nothing to avoid hitting padding mines.
 
 ```lua
 require('stdlib.eternalfile')()
 ```
 
-### `uwuify`
-
-```lua
-uwuify = require('stdlib.uwuify')
-print(uwuify('hello, world!')) --> hewwo, wowwd!
-```
-
-_A very important library I don't see enough game engines include in their standard libraries._
-
 ## Examples
+
+TODO update with v2 changes
 
 Here are a couple of examples. All of these are standalone `main.lua` files that you can plug in and view the results of!
 
@@ -1148,65 +928,6 @@ local text = BitmapText('common', 'Hello, world!')
 text:xy(scx, scy)
 
 uranium.on('update', function()
-  text:Draw()
-end)
-```
-
-### Default Uranium Template code
-```lua
-require('stdlib.color')
-require('stdlib.players')
-P1:hidden(1)
-P2:hidden(2)
-require('stdlib.eternalfile')()
-
--- define a basic quad
-local quad = Quad()
-quad:xy(scx, scy)
-quad:zoom(120)
-quad:diffuse(0.8, 1, 0.7, 1)
-quad:skewx(0.2)
-uranium.config.resetActorOnFrameStart(quad)
-
--- define a sprite
-local sprite = Sprite('docs/uranium.png')
-sprite:xy(scx, scy)
-sprite:zoom(0.4)
-sprite:glow(1, 1, 1, 0)
-
--- let's add some text aswell
-local text = BitmapText('common', 'hello, uranium template!')
-text:xy(scx, scy + 100)
-
--- update gets called every frame
--- dt here refers to deltatime - the time that has passed since the last frame!
-uranium.on('update', function(dt)
-  -- let's rotate our quad
-  quad:rotationz(t * 80)
-  -- then shove it to the screen - similar to a drawfunction!
-  quad:Draw()
-  -- and you can do this multiple times of course!
-  quad:zoomto(180, 180)
-  quad:rotationz(t * 100)
-  quad:diffusealpha(0.4)
-  quad:skewx(0.1)
-  quad:Draw()
-  -- no need to reset properties - uranium resets all properties that you set upon definition!
-
-  -- throw in the logo aswell, because why not
-  -- zoom and glow is done for a quick-and-dirty outline
-  sprite:zoom(sprite:GetZoom() * 1.1)
-  sprite:glow(1, 1, 1, 1)
-  sprite:Draw()
-  -- if you can't wait until the start of a frame to reset properties, you can manually do it
-  reset(sprite)
-  sprite:Draw()
-
-  -- for the text, get a rainbow color
-  local col = shsv(t * 0.6, 0.5, 1)
-  text:diffuse(col:unpack()) -- the :unpack() is necessary when passing into :diffuse()
-  -- wag the text
-  text:rotationz(math.sin(t * 2) * 10)
   text:Draw()
 end)
 ```
@@ -1516,5 +1237,5 @@ end)
 ## Credits
 
 **XeroOl** - Mirin Template was a massive design inspiration; early stages of this template borrowed lots of code from it and the current `require` implementation has been grabbed directly from it<br>
-**Mayflower**, **Aura** - Testing, design help<br>
+**Mayflower**, **Aura**, **Jollysivie** - Testing, design help<br>
 **mangoafterdawn** - The Uranium Template logo!<br>
