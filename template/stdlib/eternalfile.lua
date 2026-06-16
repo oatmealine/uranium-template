@@ -1,4 +1,5 @@
-require('stdlib.players')
+local events = require 'uranium.events'
+require 'stdlib.players'
 
 return function()
   if P1 then
@@ -8,7 +9,8 @@ return function()
     P2:SetNoteDataFromLua({})
   end
 
-  uranium.on('update', function()
+  events:on('update', function()
+    local b = GAMESTATE:GetSongBeat()
     if b >= 1 then
       GAMESTATE:SetSongBeat(b % 1)
     end

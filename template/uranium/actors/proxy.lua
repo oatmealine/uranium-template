@@ -128,7 +128,7 @@ function Proxy.setData(proxy, key, value)
   return value
 end
 
-function Proxy.getData(proxy, key, value)
+function Proxy.getData(proxy, key)
   assert(Proxy.isProxy(proxy), 'actor235: passed in value is not a Proxy')
   return proxy.__proxy.data[key]
 end
