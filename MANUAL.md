@@ -51,6 +51,7 @@ design decisions came from experience using prototype versions of it!
     - [`ready()`](#ready)
     - [`exit()`](#exit)
     - [`focus(hasFocus: boolean)`](#focushasfocus-boolean)
+  - [Loading stage order](#loading-stage-order)
   - [Custom callbacks](#custom-callbacks)
   - [Advanced usage](#advanced-usage)
 - [Configuration](#configuration)
@@ -497,6 +498,30 @@ inconsistent and hacky event**, and you should never be relying on it.
 #### `focus(hasFocus: boolean)`
 Called whenever the window loses/gains focus. Convenient event shim for the
 `WindowFocus` and `WindowFocusLost` commmands.
+
+### Loading stage order
+
+As a brief overview, it may be helpful to know exactly what Uranium's
+initalization and load process looks like to know which events do what.
+
+Uranium loads code in 4 stages:
+
+- **Load**: The template Lua is loaded by the engine, and the template then
+  loads your `main.lua`. During this stage, you're able to define actors with
+  `uranium.ctx`, but they will only begin being created during the next stage.
+- **Init**: The engine is now walking through `actors.xml` and calling the
+  actors' `InitCommmand`s one by one. This runs any queued methods on those
+  actors.
+- **On**: Every actor in the screen has now been created and is safe to access.
+  The `init` event is called here.
+- **Ready**: At the beginning of the first update tick in ScreenGameplay, the
+  engine calls the Ready commmand to signal that the song is now starting. This
+  is the stage at which players are safe to reference. The `ready` event is
+  called here.
+
+After initialization completes, the `update` event is fired every tick until the
+modfile ends or is exited. This isn't technically an initialization stage, but
+can be referred to as the **runtime** stage.
 
 ### Custom callbacks
 
