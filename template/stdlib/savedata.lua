@@ -3,9 +3,8 @@
 local self = {}
 
 local EventHandler = require 'stdlib.eventhandler'
-local binser = require('stdlib.binser')
+local binser = require 'stdlib.binser'
 require('stdlib.util')
-local scheduler = require('stdlib.scheduler')
 local events = require 'uranium.events'
 
 local savedataName
@@ -127,29 +126,29 @@ end
 
 function self.load()
   checkIfInitialized()
-  print('loading...')
+  --print('loading...')
   local profile = PROFILEMAN:GetMachineProfile():GetSaved()
   local save = {}
   local serialized = profile[savedataName]
 
   if not serialized then
-    print('no savedata found')
+    --print('no savedata found')
     save = savedata
   else
-    print('savedata found: ' .. serialized)
+    --print('savedata found: ' .. serialized)
     local ok
     ok, save = pcall(binser.deserializeN, serialized, 1)
     if not ok then
-      print('savedata corrupt, reverting to default')
+      --print('savedata corrupt, reverting to default')
       save = savedata
     else
-      print('deserialized: ' .. fullDump(save))
+      --print('deserialized: ' .. fullDump(save))
     end
   end
 
   local newSavedata = mergeTable(savedata, save)
   replaceFromRoot(savedata, newSavedata)
-  print('merged: ' .. fullDump(savedata))
+  --print('merged: ' .. fullDump(savedata))
 end
 
 self.events = EventHandler.new()
@@ -157,12 +156,12 @@ self.events = EventHandler.new()
 ---@param instant boolean | nil
 function self.save(instant)
   checkIfInitialized()
-  print('saving...')
+  --print('saving...')
   local profile = PROFILEMAN:GetMachineProfile():GetSaved()
   savedata._lastSave = {Hour(), Minute(), DayOfMonth(), MonthOfYear(), Year()}
-  print('savedata: ' .. fullDump(savedata))
+  --print('savedata: ' .. fullDump(savedata))
   local serialized = binser.serialize(savedata)
-  print('serialized: ' .. serialized)
+  --print('serialized: ' .. serialized)
   profile[savedataName] = serialized
 
   self.events:call('save')
@@ -171,13 +170,16 @@ function self.save(instant)
     self.events:call('saveFinished')
   else
     self.saveNextFrame = true
-    scheduler:scheduleInTicks(2, function()
-      self.saveNextFrame = false
-      PROFILEMAN:SaveMachineProfile()
-      self.events:call('saveFinished')
-    end)
   end
 end
+
+events:on('update', function()
+  if self.saveNextFrame then
+    self.saveNextFrame = false
+    PROFILEMAN:SaveMachineProfile()
+    self.events:call('saveFinished')
+  end
+end)
 
 function self.getLastSave()
   checkIfInitialized()
