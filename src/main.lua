@@ -1,14 +1,13 @@
 local uranium = require 'uranium'
 local events = require 'uranium.events'
+local players = require 'stdlib.players'
+
+players[1]:hidden(1)
+players[2]:hidden(1)
+
+require 'stdlib.eternalfile'
 
 local ctx = uranium.ctx
-
-events:on('ready', function()
-  require('stdlib.players')
-  P1:hidden(1)
-  P2:hidden(2)
-  require('stdlib.eternalfile')()
-end)
 
 -- define a basic quad
 local quad = ctx:Quad()

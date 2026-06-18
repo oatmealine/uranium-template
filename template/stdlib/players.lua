@@ -1,29 +1,17 @@
--- TODO force this to only work on ready to prevent epic crashes on screengameplay
+local Proxy = require 'uranium.actors.proxy'
+local events = require 'uranium.events'
 
-local max_pn = 8
+local players = {}
+local maxPn = 8
 
----@type Player[]
-P = {}
--- for type declarations
----@type Player
-P1 = nil
----@type Player
-P2 = nil
----@type Player
-P3 = nil
----@type Player
-P4 = nil
----@type Player
-P5 = nil
----@type Player
-P6 = nil
----@type Player
-P7 = nil
----@type Player
-P8 = nil
-
-for pn = 1, max_pn do
-  local player = SCREENMAN('PlayerP' .. pn)
-  oat['P' .. pn] = player
-  P[pn] = player
+for pn = 1, maxPn do
+  players[pn] = Proxy.new('Player')
 end
+
+events:on('ready', function()
+  for pn = 1, maxPn do
+    Proxy.resolve(players[pn], SCREENMAN('PlayerP' .. pn))
+  end
+end)
+
+return players
