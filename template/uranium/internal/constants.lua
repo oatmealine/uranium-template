@@ -1,7 +1,5 @@
--- indexing things on _G is slower than
--- having access to them in a local `oat` table
--- that already acts as _G, so we move commonly
--- use values over
+-- indexing things on _G is slower than having access to them in a local `oat`
+-- table that already acts as _G, so we move commonly used values over
 
 local function copy(src)
   local dest = {}

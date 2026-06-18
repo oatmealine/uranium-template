@@ -89,5 +89,4 @@
   self:removecommand('Init')
 end"><children>
   <Layer File="actors.xml" />
-  <Layer Type="Quad" InitCommand="xywh,SCREEN_CENTER_X,SCREEN_CENTER_Y,SCREEN_WIDTH,SCREEN_HEIGHT;diffuse,#000000;sleep,9e9"/>
 </children></Layer>

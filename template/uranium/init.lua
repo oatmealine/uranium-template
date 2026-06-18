@@ -7,7 +7,7 @@ local config = require 'uranium.config'
 local uranium = {}
 
 local hasExited = false
-events:on('exit', function()
+local function onExited()
   if hasExited then return end
   hasExited = true
   events:call('exit')
@@ -17,23 +17,12 @@ events:on('exit', function()
   oat = nil
   _main:hidden(1)
   collectgarbage()
-end)
-
-local function backToSongWheel(message)
-  if message then
-    SCREENMAN:SystemMessage(message)
-    print(message)
-  end
-  events:call('exit')
-  GAMESTATE:FinishSong()
-  -- disable update_command
-  _main:hidden(1)
 end
 
 local function onCommand(self)
   actors.finalize()
   events:call('init')
-  _main:SetDrawFunction(function() end)
+  --self:SetDrawFunction(function() end)
 end
 
 -- runs once during ScreenReadyCommand, before the user code is loaded
@@ -57,7 +46,43 @@ end
 GAMESTATE:ApplyModifiers('clearall')
 
 local t = 0
-local lastt = GAMESTATE:GetSongTime()
+local lastT = 0
+
+local errored = false
+local firstRun = true
+local playersLoaded = false
+
+local function update()
+  if errored or hasExited then return end
+  errored = true
+
+  local P1, P2 = SCREENMAN('PlayerP1'), SCREENMAN('PlayerP2')
+  if P1 and P2 then
+    playersLoaded = true
+  end
+  if playersLoaded and not P1 and not P2 then -- sora exit hack
+    onExited()
+  end
+
+  local newT = os.clock()
+  local dt = newT - lastT
+  dt = math.max(dt, 0)
+  lastT = newT
+
+  if firstRun then
+    firstRun = false
+    dt = 0
+    events:call('ready')
+  end
+
+  t = t + dt
+
+  events:call('update', dt)
+
+  errored = false
+end
+
+---@param self ActorFrame
 local function screenReadyCommand(self)
   actors.finalize()
 
@@ -66,96 +91,36 @@ local function screenReadyCommand(self)
   end
 
   self:hidden(0)
-
-  collectgarbage()
-
-  local errored = false
-  local firstrun = true
-  local playersLoaded = false
-  self:addcommand('Update', function()
-    if errored then
-      return 0
-    end
-    errored = true
-
-    local P1, P2 = SCREENMAN('PlayerP1'), SCREENMAN('PlayerP2')
-    if P1 and P2 then
-      playersLoaded = true
-    end
-    if playersLoaded and not P1 and not P2 then -- sora exit hack
-      events:call('exit')
-    end
-
-    local newt = os.clock()
-    local dt = newt - lastt
-    dt = math.max(dt, 0)
-    lastt = newt
-
-    if firstrun then
-      firstrun = false
-      dt = 0
-      self:GetChildren()[2]:hidden(1)
-      events:call('ready')
-    end
-
-    t = t + dt
-
-    events:call('update', dt)
-
-    errored = false
-
-    return 0
-  end)
-  self:luaeffect('Update')
+  --self:addcommand('Update', update)
+  --self:luaeffect('Update')
+  self:SetDrawFunction(update)
+  update()
 end
 
----@class UraniumRelease
----@field branch string
----@field commit string
----@field version string
----@field name string
----@field prettyName string
----@field homeURL string
-
----@type UraniumRelease
-uranium.release = {}
-
-if not pcall(function() uranium.release = require('uranium.internal.release') end) then
-  uranium.release = require('uranium.internal.release_blank')
-end
+uranium.release = require 'uranium.internal.release'
 
 uranium.ctx = actors.Context.new()
 
 -- as a hack to prevent infinite loops if this is loaded again from the user's
 -- code
-
 oat.package.loaded['uranium'] = uranium
 
-local success, result = pcall(function()
-  return require('main')
+require('main')
+
+print('---')
+
+actors.ready(uranium.ctx)
+
+_main:addcommand('On', onCommand)
+_main:addcommand('Ready', screenReadyCommand)
+_main:addcommand('Off', function() onExited() end)
+_main:addcommand('SaltyReset', function() onExited() end)
+_main:addcommand('WindowFocus', function()
+  events:call('focus', true)
 end)
-
-if success then
-  print('---')
-
-  actors.ready(uranium.ctx)
-
-  _main:addcommand('On', onCommand)
-  _main:addcommand('Ready', screenReadyCommand)
-  _main:addcommand('Off', function() events:call('exit') end)
-  _main:addcommand('SaltyReset', function() events:call('exit') end)
-  _main:addcommand('WindowFocus', function()
-    events:call('focus', true)
-  end)
-  _main:addcommand('WindowFocusLost', function()
-    events:call('focus', false)
-  end)
-  _main:queuecommand('Ready')
-else
-  Trace('got an error loading main.lua!')
-  Trace(result)
-  backToSongWheel('loading .lua file failed, check log for details')
-  error('uranium: loading main.lua file failed:\n' .. result)
-end
+_main:addcommand('WindowFocusLost', function()
+  events:call('focus', false)
+end)
+_main:queuecommand('Ready')
 
 return uranium

@@ -1,4 +1,4 @@
-<ActorFrame><children>
+<ActorFrame Condition="oat and oat.actor"><children>
   <Layer Condition="oat.actor.Condition(false)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" InitCommand="%oat.actor.Init(1)" />
   <Layer Condition="oat.actor.Condition(true)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" Frag="@oat.actor.Frag()" Vert="@oat.actor.Vert()" InitCommand="%oat.actor.Init(1)" />
   <Layer Condition="oat.actor.Condition(false)" Type="@oat.actor.Type()" File="@oat.actor.File()" Font="@oat.actor.Font()" InitCommand="%oat.actor.Init(2)" />
