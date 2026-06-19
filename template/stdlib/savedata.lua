@@ -4,7 +4,6 @@ local self = {}
 
 local EventHandler = require 'stdlib.eventhandler'
 local binser = require 'stdlib.binser'
-require('stdlib.util')
 local events = require 'uranium.events'
 
 local savedataName
@@ -62,16 +61,12 @@ local function checkIfInitialized()
   end
 end
 
-local function convertSource(s)
-  local pathSplit = split(s.source, '/')
-  local lastTwo = pathSplit[#pathSplit - 1] .. '/' .. string.sub(pathSplit[#pathSplit], 1, -5)
-  return lastTwo
-end
-
 ---@param data table
 ---@param name string | nil
 function self.s(data, name)
-  if not name then name = convertSource(debug.getinfo(2, 'S')) end
+  if not name then
+    name = string.sub(debug.getinfo(2, 'S').source, #('@' .. package.base) + 1)
+  end
   checkIfInitialized()
   if loadedSavedata then
     error('uranium: cannot add new savedata after initializing!', 3)
