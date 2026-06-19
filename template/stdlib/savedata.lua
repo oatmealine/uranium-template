@@ -1,5 +1,3 @@
--- TODO replace prints with some logger lib?
-
 local self = {}
 
 local EventHandler = require 'stdlib.eventhandler'
@@ -14,60 +12,36 @@ local loadedSavedata = false
 
 self.saveNextFrame = false
 
----@param name string @a unique name for the entire modfile
----@param forceIgnore boolean | nil
---- for picking a name:
---- please head to this link:
---- https://www.random.org/strings/?num=1&len=16&digits=on&upperalpha=on&loweralpha=on&unique=on&format=plain&rnd=new
---- and generate yourself a hash. afterwards, append it to your game name like so:
---- savedata.initializeModule('myGameName_doAmaUOBIjiaSWyz')
---- this helps ensure no collisions happen, breaking both of the modfiles in the process!
---- **DON'T CHANGE THIS!!** else you'll break existing saves
-function self.initializeModule(name, forceIgnore)
+-- for the name, come up with a unique identifier; either reverse DNS or a
+-- random alphanumeric string are recommended. this will be used across an
+-- entire NotITG install to identify the game's saves, so make sure to try and
+-- minimize collisions
+---@param name string
+function self.init(name)
   if loadedSavedata then
-    error('uranium: cannot initialize savedata module after uranium.init!', 3)
+    error('uranium: cannot initialize savedata module after uranium.init!', 2)
   end
-  if not forceIgnore then
-    if #name < 16 then
-      error('uranium: savedata name too short! must be at least 16 characters long', 2)
-    end
-
-    local normalChars = 0
-    local specialChars = 0
-    for i = 1, #name do
-      local char = string.sub(name, i, i)
-      local special = string.lower(char) == string.upper(char)
-      if special then
-        specialChars = specialChars + 1
-      else
-        normalChars = normalChars + 1
-      end
-    end
-
-    if normalChars < 4 then
-      error('uranium: savedata name should have at least 4 non-special characters!', 2)
-    end
-    if specialChars < 2 then
-      error('uranium: savedata name should have at least 2 special characters!', 2)
-    end
-  end
-
   savedataName = name
 end
 
-local function checkIfInitialized()
+local function assertInitialized()
   if not savedataName then
-    error('uranium: savedata not initialized! please run savedata.initializeModule first', 3)
+    error('uranium: savedata not initialized! please run savedata.init first', 3)
   end
 end
 
----@param data table
----@param name string | nil
+-- creates a new save module using the data given as the default savedata aswell
+-- as the save structure. the table passed and returned will then be written to
+-- when the save loads, and read from when it saves
+---@generic T: table
+---@param data T
+---@param name? string @ defaults to the filepath of the file where this function is called
+---@return T
 function self.s(data, name)
   if not name then
     name = string.sub(debug.getinfo(2, 'S').source, #('@' .. package.base) + 1)
   end
-  checkIfInitialized()
+  assertInitialized()
   if loadedSavedata then
     error('uranium: cannot add new savedata after initializing!', 3)
   end
@@ -75,6 +49,7 @@ function self.s(data, name)
     error('uranium: cannot start savedata name with an underscore', 2)
   end
   savedata[name] = data
+  return data
 end
 
 --- prefers tab1 with type mismatches; prefers tab2 with value mismatches
@@ -95,32 +70,19 @@ local function mergeTable(tab1, tab2)
   return tab
 end
 
---- replaces tab1 with tab2, preserving pointers
---- this sucks
+-- replaces tab1 with tab2, preserving pointers
 local function replaceFromRoot(tab1, tab2)
-  local keys = {}
-  for k in pairs(tab1) do
-    if not includes(keys, k) then
-      table.insert(keys, k)
-    end
-  end
   for k in pairs(tab2) do
-    if not includes(keys, k) then
-      table.insert(keys, k)
-    end
-  end
-
-  for _, key in ipairs(keys) do
-    if type(tab1[key]) == type(tab2[key]) and type(tab1[key]) == 'table' then
-      replaceFromRoot(tab1[key], tab2[key])
+    if type(tab1[k]) == type(tab2[k]) and type(tab1[k]) == 'table' then
+      replaceFromRoot(tab1[k], tab2[k])
     else
-      tab1[key] = tab2[key]
+      tab1[k] = tab2[k]
     end
   end
 end
 
 function self.load()
-  checkIfInitialized()
+  assertInitialized()
   --print('loading...')
   local profile = PROFILEMAN:GetMachineProfile():GetSaved()
   local save = {}
@@ -130,33 +92,25 @@ function self.load()
     --print('no savedata found')
     save = savedata
   else
-    --print('savedata found: ' .. serialized)
     local ok
     ok, save = pcall(binser.deserializeN, serialized, 1)
     if not ok then
-      --print('savedata corrupt, reverting to default')
       save = savedata
-    else
-      --print('deserialized: ' .. fullDump(save))
     end
   end
 
   local newSavedata = mergeTable(savedata, save)
   replaceFromRoot(savedata, newSavedata)
-  --print('merged: ' .. fullDump(savedata))
 end
 
 self.events = EventHandler.new()
 
 ---@param instant boolean | nil
 function self.save(instant)
-  checkIfInitialized()
-  --print('saving...')
+  assertInitialized()
   local profile = PROFILEMAN:GetMachineProfile():GetSaved()
   savedata._lastSave = {Hour(), Minute(), DayOfMonth(), MonthOfYear(), Year()}
-  --print('savedata: ' .. fullDump(savedata))
   local serialized = binser.serialize(savedata)
-  --print('serialized: ' .. serialized)
   profile[savedataName] = serialized
 
   self.events:call('save')
@@ -177,7 +131,7 @@ events:on('update', function()
 end)
 
 function self.getLastSave()
-  checkIfInitialized()
+  assertInitialized()
   if savedata._lastSave and savedata._lastSave[1] == 0 and savedata._lastSave[2] == 0 and savedata._lastSave[3] == 0 and savedata._lastSave[4] == 0 and savedata._lastSave[5] == 0 then
     return nil
   else
@@ -193,7 +147,7 @@ events:on('init', function()
 end)
 
 function self.enableAutosave()
-  checkIfInitialized()
+  assertInitialized()
   events:on('exit', function()
     if loadedSavedata then
       self.save(true)
