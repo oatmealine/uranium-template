@@ -22,7 +22,7 @@ end
 ---@param event string
 ---@param ... any
 ---@return any
---- Call a defined callback.
+--- Call a defined callback. Returns the first value that any callback returns.
 function EventHandler:call(event, ...)
   if self.callbacks[event] then
     for _, callback in ipairs(self.callbacks[event]) do
@@ -48,7 +48,7 @@ function EventHandler:on(event, f)
   table.insert(self.callbacks[event], f)
 end
 
--- Create a subhandler, passing all the events of this handler to it
+-- Create a subhandler, passing all the events of this handler to it.
 ---@param name string?
 ---@return EventHandler
 function EventHandler:subhandler(name)
@@ -58,7 +58,7 @@ function EventHandler:subhandler(name)
   return handler
 end
 
--- Orphan a subhandler, not letting it recieve events from its parent anymore
+-- Orphan a subhandler, not letting it recieve events from its parent anymore.
 function EventHandler:orphan()
   if not self.parent then
     error('Tried to orphan parentless EventHandler', 2)

@@ -8,7 +8,7 @@ local self = {}
 ---| 'Down'        # default binds - P1: Down, P2: KP2
 ---| 'Up'          # default binds - P1: Up, P2: KP8
 ---| 'Right'       # default binds - P1: Right, P2: KP6
----| 'MenuStart'   # default binds - P1: Enter, P2: KPEnter
+---| 'MenuStart'   # default binds - P1: Enter, P2: KPEnter; written in-game as 'Start'. `MenuStart` may sound like a distinct input from a theoretical `Start`, but no such input exists
 ---| 'Select'      # default binds - P1: RShift, P2: KP0
 ---| 'Back'        # default binds - P1: Esc, P2: NumLock; doesn't register, as it will cause you to back out of the file
 ---| 'Coin'        # default binds - P1: F1
@@ -49,6 +49,8 @@ for pn = 1, 2 do
   end
 end
 
+-- Checks if an input is currently held down. If `pn` is not provided, players
+-- are ignored and it checks if either of the players have the input held down.
 ---@param i InputType
 ---@param pn? number
 ---@return boolean

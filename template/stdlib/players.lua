@@ -5,11 +5,13 @@ local players = {}
 local maxPn = 8
 
 for pn = 1, maxPn do
-  players[pn] = Proxy.new('Player')
+  if GAMESTATE:IsPlayerEnabled((pn - 1) % 2) then
+    players[pn] = Proxy.new('Player')
+  end
 end
 
 events:on('ready', function()
-  for pn = 1, maxPn do
+  for pn in pairs(players) do
     Proxy.resolve(players[pn], SCREENMAN('PlayerP' .. pn))
   end
 end)

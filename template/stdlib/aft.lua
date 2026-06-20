@@ -1,7 +1,7 @@
 local self = {}
 
 -- Sets up a Sprite for textures from AFTs, scaling it with the display
--- resolution
+-- resolution.
 ---@param sprite Sprite
 function self.setupSprite(sprite)
   sprite:basezoomx(sw / dw)
@@ -11,9 +11,9 @@ function self.setupSprite(sprite)
 end
 
 -- Creates a Sprite for textures from AFTs, scaling it with the display
--- resolution
+-- resolution.
 --
--- Like `setupSprite`, but includes creating the Sprite from a Context
+-- Like `setupSprite`, but includes creating the Sprite from a Context.
 ---@param ctx Context
 function self.createSprite(ctx)
   local sprite = ctx:Sprite()
@@ -21,7 +21,7 @@ function self.createSprite(ctx)
   return sprite
 end
 
--- Sets up an AFT that will capture the entire scene when drawn
+-- Sets up an AFT that will capture the entire scene when drawn.
 ---@param aft ActorFrameTexture
 function self.setupAFT(aft)
   aft:SetWidth(dw)
@@ -33,9 +33,9 @@ function self.setupAFT(aft)
   aft:Create()
 end
 
--- Creates an AFT that will capture the entire scene when drawn
+-- Creates an AFT that will capture the entire scene when drawn.
 --
--- Like `setupAFT`, but includes creating the AFT from a Context
+-- Like `setupAFT`, but includes creating the AFT from a Context.
 ---@param ctx Context
 function self.createAFT(ctx)
   local aft = ctx:ActorFrameTexture()
@@ -43,8 +43,8 @@ function self.createAFT(ctx)
   return aft
 end
 
--- Creates a sprite with `createSprite`, an AFT with `createAFT`, and assigns
--- the sprite a texture from the AFT, returning both
+-- Creates an AFT with `createAFT`, a sprite with `createSprite`, and assigns
+-- the sprite a texture from the AFT, returning both in that order.
 ---@param ctx Context
 ---@return ActorFrameTexture, Sprite
 function self.createEffectStack(ctx)
