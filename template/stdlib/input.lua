@@ -1,133 +1,84 @@
--- TODO the enum/string dichotomy here is weird
-
 local events = require 'uranium.events'
 local EventHandler = require 'stdlib.eventhandler'
 
 local self = {}
 
----@enum inputType
-self.inputType = {
-  Left = 0,
-  Down = 1,
-  Up = 2,
-  Right = 3,
-  Start = 4,
-  Select = 5,
-  Back = 6,
-  Coin = 7,
-  Operator = 8,
-  UpLeft = 9,
-  UpRight = 10,
-  MenuLeft = 11,
-  MenuDown = 12,
-  MenuUp = 13,
-  MenuRight = 14,
-  MenuStart = 15,
-  ActionLeft = 16,
-  ActionDown = 17,
-  ActionUp = 18,
-  ActionRight = 19,
-  Action1 = 20,
-  Action2 = 21,
-  Action3 = 22,
-  Action4 = 23,
-  Action5 = 24,
-  Action6 = 25,
-  Action7 = 26,
-  Action8 = 27
+---@alias InputType
+---| 'Left'        # default binds - P1: Left, P2: KP4
+---| 'Down'        # default binds - P1: Down, P2: KP2
+---| 'Up'          # default binds - P1: Up, P2: KP8
+---| 'Right'       # default binds - P1: Right, P2: KP6
+---| 'MenuStart'   # default binds - P1: Enter, P2: KPEnter
+---| 'Select'      # default binds - P1: RShift, P2: KP0
+---| 'Back'        # default binds - P1: Esc, P2: NumLock; doesn't register, as it will cause you to back out of the file
+---| 'Coin'        # default binds - P1: F1
+---| 'Operator'    # default binds - P1: Insert, Scroll Lock; doesn't register, as it will cause you to back out of the file
+---| 'UpLeft'      # default binds - P2: Num7
+---| 'UpRight'     # default binds - P2: Num9
+---| 'MenuLeft'    # default binds - P1: Delete, P2: KP/
+---| 'MenuDown'    # default binds - P1: End, P2: KP+
+---| 'MenuUp'      # default binds - P1: Home, P2: KP-
+---| 'MenuRight'   # default binds - P1: PgDn, P2: KP*
+---| 'ActionLeft'
+---| 'ActionDown'
+---| 'ActionUp'
+---| 'ActionRight'
+---| 'Action1'     # default binds - P1: 1
+---| 'Action2'     # default binds - P1: 2
+---| 'Action3'     # default binds - P1: 3
+---| 'Action4'     # default binds - P1: 4
+---| 'Action5'     # default binds - P1: 5
+---| 'Action6'     # default binds - P1: 6
+---| 'Action7'     # default binds - P1: 7
+---| 'Action8'     # default binds - P1: 8
+
+local inputTypes = {
+  'Left', 'Down', 'Up', 'Right', 'MenuStart', 'Select', 'Back', 'Coin',
+  'Operator', 'UpLeft', 'UpRight', 'MenuLeft', 'MenuDown', 'MenuUp',
+  'MenuRight', 'ActionLeft', 'ActionDown', 'ActionUp', 'ActionRight', 'Action1',
+  'Action2', 'Action3', 'Action4', 'Action5', 'Action6', 'Action7', 'Action8',
 }
 
----@type table<integer, table<inputType, number>>
---- -1 for not pressed, time for time of press
-self.inputs = {}
----@type table<integer, table<inputType, number>>
-self.rawInputs = {}
+---@type table<integer, table<InputType, boolean>>
+local inputs = {}
 
 for pn = 1, 2 do
-  self.inputs[pn] = {}
-  self.rawInputs[pn] = {}
-  for _, v in pairs(self.inputType) do
-    self.inputs[pn][v] = -1
-    self.rawInputs[pn][v] = -1
+  inputs[pn] = {}
+  for _, v in pairs(inputTypes) do
+    inputs[pn][v] = false
   end
 end
 
-self.directions = {
-  [self.inputType.Left] = {-1, 0},
-  [self.inputType.Down] = {0, 1},
-  [self.inputType.Up] = {0, -1},
-  [self.inputType.Right] = {1, 0}
-}
-
--- Mappings for the default keybinds for these keys; recommended to put alongside the in-game representation in UIs
-self.keyboardEquivalent = {
-  [self.inputType.Left] = 'L',
-  [self.inputType.Down] = 'D',
-  [self.inputType.Up] = 'U',
-  [self.inputType.Right] = 'R',
-  [self.inputType.Start] = 'Enter',
-  [self.inputType.Select] = 'Shift',
-  [self.inputType.Action1] = '1',
-  [self.inputType.Action2] = '2',
-  [self.inputType.Action3] = '3',
-  [self.inputType.Action4] = '4',
-  [self.inputType.Action5] = '5',
-  [self.inputType.Action6] = '6',
-  [self.inputType.Action7] = '7',
-  [self.inputType.Action8] = '8',
-  [self.inputType.Coin] = 'F1',
-  [self.inputType.Back] = 'Esc'
-}
-
----@param i inputType
----@return string | nil
-function self.getInputName(i)
-  for k, v in pairs(self.inputType) do
-    if v == i then return k end
-  end
-  return nil
-end
-
----@param i string
----@param pn number | nil
----@return number
-function self.getInput(i, pn)
-  if not pn then
-    for plr = 1, 2 do
-      if self.inputs[plr][self.inputType[i]] ~= -1 then
-        return self.inputs[plr][self.inputType[i]]
-      end
-    end
-    return -1
-  else
-    return self.inputs[pn][self.inputType[i]]
-  end
-end
-
----@param i string
----@param pn number | nil
+---@param i InputType
+---@param pn? number
 ---@return boolean
 function self.isDown(i, pn)
-  return self.getInput(i, pn) ~= -1
+  if not pn then
+    for plr = 1, 2 do
+      if inputs[plr][i] then
+        return true
+      end
+    end
+    return false
+  else
+    return inputs[pn][i]
+  end
 end
 
 self.events = EventHandler.new('input')
 
 events:on('init', function()
   for pn = 1, 2 do
-    for j, v in pairs(self.inputType) do
-      local j = j -- lua scope funnies
-      local v = v
-
-      _main:addcommand('StepP' .. pn .. j .. 'PressMessage', function()
-        self.rawInputs[pn][v] = t
-        if self.events:call('press', v, pn) then return end
-        self.inputs[pn][v] = t
+    local pn = pn
+    for _, key in ipairs(inputTypes) do
+      local key = key
+      _main:addcommand('StepP' .. pn .. key .. 'PressMessage', function()
+        self.events:call('press', key, pn)
+        self.inputs[pn][key] = true
       end)
-      _main:addcommand('StepP' .. pn .. j .. 'LiftMessage', function()
-        self.rawInputs[pn][v] = -1
-        if self.events:call('release', v, pn) then return end
-        self.inputs[pn][v] = -1
+      _main:addcommand('StepP' .. pn .. key .. 'LiftMessage', function()
+        self.events:call('release', key, pn)
+        self.inputs[pn][key] = false
       end)
     end
   end
