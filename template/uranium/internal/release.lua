@@ -1,5 +1,5 @@
 return {
-  version = '2.0-a4',
+  version = '2.0-rc1',
 
   name = 'uranium',
   prettyName = 'Uranium Template',
