@@ -1,63 +1,63 @@
 local uranium = require 'uranium'
-local rootCtx = uranium.ctx
-
 local events = require 'uranium.events'
-local actors = require 'uranium.actors'
-local Context = actors.Context
 
-local af = rootCtx:ActorFrame()
-af:xy(scx, scy)
-local ctx = Context.getContext(af)
+local ctx = uranium.ctx
 
+local P = require('stdlib.players')
+P[1]:hidden(1)
+P[2]:hidden(2)
+
+require 'stdlib.eternalfile'
+
+-- define a basic quad
+local quad = ctx:Quad()
+quad:xy(scx, scy)
+
+-- define a sprite
 local sprite = ctx:Sprite('docs/uranium.png')
+sprite:xy(scx, scy)
 
-local quadsAF = ctx:ActorFrame()
-local quadCtx = Context.getContext(quadsAF)
+-- let's add some text aswell
+local text = ctx:BitmapText('common', 'hello, uranium template v' .. uranium.release.version .. '!')
+text:xy(scx, scy + 100)
 
-local quads = {}
-for i = 1, 50 do
-  local q = quadCtx:Quad()
-  q:zoom(math.random(30, 50))
-  q:xy(math.random(-200, 200), math.random(-200, 200))
-  q:diffusealpha(0.7)
-  q:rotationx(math.random(0, 360))
-  q:rotationy(math.random(0, 360))
-  q:rotationz(math.random(0, 360))
-  table.insert(quads, q)
-end
-
+-- update gets called every frame
+-- dt here refers to deltatime - the time that has passed since the last frame!
 local t = 0
+events:on('update', function(dt)
+  t = t + dt
 
-quadsAF:SetDrawFunction(function()
-  for _, v in ipairs(quads) do
-    v:Draw()
-  end
+  -- let's set some properties on the quad
+  quad:zoom(120)
+  quad:diffuse(0.8, 1, 0.7, 1)
+  quad:skewx(0.2)
+  quad:rotationz(t * 80)
+  -- then shove it to the screen - similar to a drawfunction!
+  quad:Draw()
+  -- and you can do this multiple times of course!
+  quad:zoomto(180, 180)
+  quad:rotationz(t * 100)
+  quad:diffusealpha(0.4)
+  quad:skewx(0.1)
+  quad:Draw()
 
-  quadsAF:rotationz(-t * 30)
-end)
-
-af:SetDrawFunction(function()
-  quadsAF:Draw()
-
-  af:rotationz(t * 90)
-  af:zoom(1 + math.sin(t) * 0.2)
-
-  sprite:xy(math.cos(t) * 100, math.sin(t) * 100)
-
-  sprite:zoom(0.45)
+  -- throw in the logo aswell, because why not
+  -- zoom and glow is done for a quick-and-dirty outline
+  sprite:zoom(sprite:GetZoom() * 1.1)
   sprite:glow(1, 1, 1, 1)
   sprite:Draw()
 
   sprite:zoom(0.4)
   sprite:glow(1, 1, 1, 0)
   sprite:Draw()
-end)
 
-events:on('init', function()
-  print(af, quadsAF)
-end)
-
-events:on('update', function(dt)
-  t = t + dt
-  af:Draw()
+  -- for the text, get a (quick and dirty) rainbow color
+  local r, g, b =
+    0.75 + 0.25 * math.cos(t),
+    0.75 + 0.25 * math.cos(t - 2/3 * math.pi),
+    0.75 + 0.25 * math.cos(t - 4/3 * math.pi)
+  text:diffuse(r, g, b, 1)
+  -- wag the text
+  text:rotationz(math.sin(t * 2) * 10)
+  text:Draw()
 end)
