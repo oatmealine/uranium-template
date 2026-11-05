@@ -13,10 +13,8 @@ local PATH_PREFIX_SHADER = '../'
 local PATH_PREFIX_FILE = '../'
 local PATH_PREFIX_FONT = '../'
 local ENABLE_LOGGING = false
-
-local function warn(str)
-  Debug('[actor235] WARN: ' .. tostring(str))
-end
+local NOP_FRAG_FILENAME = 'nop.frag'
+local NOP_VERT_FILENAME = 'nop.vert'
 
 local function print(...)
   if not ENABLE_LOGGING then return end
@@ -35,13 +33,14 @@ end
 ]]
 -- Low-level actor initialization / loading
 
-local log = NODES_PER_AF == 10
-            and math.log10
-            or function(n)
-              return math.log(n)/math.log(NODES_PER_AF)
-            end
+local function log(n)
+  return math.log(n)/math.log(NODES_PER_AF)
+end
+if NODES_PER_AF == 10 then
+	log = math.log10
+end
 
----@class AbstractActor
+---@class AbstractActorChild
 ---@field Type string?
 ---@field File string?
 ---@field Font string?
@@ -50,14 +49,13 @@ local log = NODES_PER_AF == 10
 ---@field Vert string
 ---@class AbstractActorFrame
 ---@field Type 'ActorFrame'
----@field Children (AbstractActor | AbstractActorFrame)[]
+---@field Children AbstractActor[]
 ---@field Init? fun(self: Actor): nil
+---@alias AbstractActor AbstractActorChild | AbstractActorFrame
 
 ---@class NodeStack
----@field actors (AbstractActor | AbstractActorFrame)[] @ Actors that should be defined in this stack
----@field depth number @ The depth at which actor placement should begin
----@field cd number @ The current actors.xml depth, incremented on recursing into actors.xml and decremented after the last Condition call
 ---@field actorIdx number @ The current actor's index, referring to `actors` (1-indexed)
+---@field actors AbstractActor[] @ Actors that should be defined in this stack (max len NODES_PER_AF)
 
 local stack = {}
 
@@ -84,142 +82,130 @@ function stack:clear()
   end
 end
 
-function stack:log(str)
-  print(string.rep('  ', #self) .. tostring(str))
+-- like print() but indented with the stack size
+function stack:log(...)
+  local msg = {}
+  for _, val in ipairs(arg) do
+    table.insert(msg, tostring(val))
+  end
+  print(string.rep('  ', #self) .. table.concat(msg, '\t'))
 end
 
-local function getMinDepth(t)
-  local depth = math.ceil(log(#t))
+-- returns "what is the depth needed to hold n actors?"
+---@param n number
+local function getMinDepth(n)
+  local depth = math.ceil(log(n))
   return math.max(depth, 1)
 end
 
----@param actors (AbstractActor | AbstractActorFrame)[]
+---@param actors AbstractActor[]
 local function pushNewLayer(actors)
-  local depth = getMinDepth(actors)
-
-  print('! there are ' .. #actors .. ' actors')
-  print('! we should be at depth ' .. getMinDepth(actors))
-  print('! which would give us ' .. math.pow(NODES_PER_AF, depth) .. ' slots to fit those actors, in theory')
+  stack:log('++')
 
   stack:push({
-    actorIdx = 0, -- start with 0 so Condition can increment it once
+    actorIdx = 1,
     actors = actors,
-    depth = depth,
-    cd = 1,
   })
 
-  --print('--- new layer ---   z: ' .. #stack)
+  --stack:log('<!-- there are ' .. #actors .. ' actors -->')
+end
+
+local currentActor
+
+local function popStack()
+  stack:pop()
+  stack:log('--')
+  if not stack:top() then
+    M.finalize()
+  else
+    --print('restoring previous currentActor')
+    -- restore previous currentActor for the InitCommmand immediately after
+    -- an actorframe can't have shaders, so we don't need to account for
+    -- Condition with hasShader making actorIdx +1 more than it should be
+    local s = stack:top()
+    currentActor = s.actors[s.actorIdx]
+    print('set currentActor to ' .. tostring(currentActor.Type) .. ' (' .. tostring(s.actorIdx) .. '/' .. tostring(#s.actors) .. ')')
+  end
 end
 
 local actorInit = {}
 
----@type AbstractActor
-local currentActor = nil
-local actorPlaced = false
-
----@return AbstractActor
-local function getNextActor()
-  local s = stack:top()
-
-  if s.cd < s.depth then
-    -- recurse
-    s.cd = s.cd + 1
-    stack:log('s.cd++ (=' .. s.cd .. ')')
-    return {
-      Type = nil,
-      File = ACTORS_FILENAME,
-    }
-  end
-
-  s.actorIdx = s.actorIdx + 1
-
-  local actor = s.actors[s.actorIdx]
-
-  if actor.Type == 'ActorFrame' then
-    -- recurse, push new layer
-    pushNewLayer(actor.Children)
-    return {
-      Type = nil,
-      File = ACTORS_FILENAME,
-    }
-  end
-
-  return actor
-end
+-- functions here are ordered in calling order
 
 function actorInit.Condition(hasShader)
   local s = stack:top()
 
-  if not s then
-    warn('ready() was not called, and yet actors.xml has been loaded? if it has, the stack is glogged')
+  currentActor = s.actors[s.actorIdx]
+
+  if hasShader then
+    s.actorIdx = s.actorIdx + 1
+  end
+
+  --stack:log('// s.actorIdx = ' .. tostring(s.actorIdx))
+
+  if not currentActor then
+    stack:log('<!-- Condition(' .. tostring(hasShader) .. ') = ' .. tostring(false) .. ' -->')
+    if s.actorIdx > NODES_PER_AF and hasShader then
+      print('we should go back now, since we\'re not making this actor and it\'s the last one')
+      popStack()
+    end
     return false
-  end
-
-  if s.actorIdx >= #s.actors then
-    -- we've placed every actor down, return early
-    stack:log('cond: (done, returning early)')
-    return false
-  end
-
-  if hasShader == false then
-    -- first of the element pair, so we grab the current actor here
-    currentActor = getNextActor()
-    actorPlaced = false
-  end
-
-  -- EDGECASE: at the edge between the end of an actorframe and the next actor
-  -- in sequence in the parent actorframe, an actor will end up being created
-  -- twice because both the last actor in an actorframe and the next after a
-  -- non-shader actor will be a shader actor, and actor creation always treats
-  -- the two in pairs and doesn't expect to run into two shader actors in a row.
-  -- when an actor is placed, actorPlaced is set to true. this is the rare case
-  -- in which actorPlaced can be true here, in which case we should assume the
-  -- actor here has already been made
-  if actorPlaced then
-    return
   end
 
   local needsShader = not not (currentActor.Frag or currentActor.Vert)
   if hasShader ~= needsShader then
-    -- only create an actor with frag/vert set if the actor truly needs it
-    return
+    stack:log('<!-- Condition(' .. tostring(hasShader) .. ') = ' .. tostring(false) .. ' -->')
+    if hasShader then
+      if s.actorIdx > NODES_PER_AF and hasShader then
+        print('we should go back now, since we\'ve made this actor and it\'s the last one')
+        popStack()
+      end
+    end
+    return false
   end
-
-  -- proceed with creation
-
-  print('cond: creating actor idx ' .. s.actorIdx)
-  print(s.actors[s.actorIdx] and s.actors[s.actorIdx].File)
-
-  actorPlaced = true
 
   stack:log('<>')
 
+  stack:log('  Condition(' .. tostring(hasShader) .. ') = ' .. tostring(true))
   return true
 end
 
+-- none of the below functions are called if Condition returns false
+
 function actorInit.Type()
-  stack:log(' Type ' .. tostring(currentActor.Type))
-  return currentActor.Type
+  if currentActor.Children then
+    return nil
+  else
+    stack:log('  Type = ' .. tostring(currentActor.Type))
+    return currentActor.Type
+  end
 end
 
 function actorInit.File()
-  stack:log(' File ' .. tostring(currentActor.File))
-  return currentActor.File
+  if currentActor.Children then
+    stack:log('  File = ' .. ACTORS_FILENAME)
+    stack:log('</><children>')
+    pushNewLayer(currentActor.Children)
+    return ACTORS_FILENAME
+  else
+    stack:log('  File = ' .. tostring(currentActor.File))
+    return currentActor.File
+  end
 end
 
 function actorInit.Font()
-  stack:log(' Font ' .. tostring(currentActor.Font))
+  stack:log('  Font = ' .. tostring(currentActor.Font))
   return currentActor.Font
 end
 
 function actorInit.Frag()
-  stack:log(' Frag ' .. tostring(currentActor.Frag))
-  return currentActor.Frag or 'nop.frag'
+  stack:log('  Frag = ' .. tostring(currentActor.Frag))
+  return currentActor.Frag or NOP_FRAG_FILENAME
 end
 
 function actorInit.Vert()
-  stack:log(' Vert ' .. tostring(currentActor.Vert))
-  return currentActor.Vert or 'nop.vert'
+  stack:log('  Vert = ' .. tostring(currentActor.Vert))
+  return currentActor.Vert or NOP_VERT_FILENAME
 end
 
 ---@param idx number @ a number from 1 to NODES_PER_AF, inclusive
@@ -228,37 +214,22 @@ function actorInit.Init(idx)
   return function(self)
     stack:log('</> -> ' .. tostring(self))
 
-    local s = stack:top()
-
-    -- SPECIAL CASE: we must manually clean up actorframes with 0 children
-    -- since no InitCommand was called while we were inside of it
-    if #s.actors == 0 then
-      s.cd = s.cd - 1
-      stack:log('s.cd-- (=' .. s.cd .. ')')
+    if self.GetChildren and not self.Create then
+      print('lowkey i\'m an actorframe. um')
+      print(currentActor)
+      print(currentActor and currentActor.Type)
     end
 
-    if s.cd == s.depth then
-      -- we're at the desired depth to define actors
-      local actor = currentActor
-      if actor.Init then actor.Init(self) end
+    if currentActor then
+      print('calling currentActor\'s init')
+      if currentActor.Init then currentActor.Init(self) end
     end
 
-    if s.cd < 1 then
-      -- we've just exited a layer!
-      print('--- layer ' .. #stack .. ' done ---')
-      stack:pop()
-      s = stack:top()
-
-      if s then
-        local actor = s.actors[s.actorIdx]
-        if actor.Init then actor.Init(self) end
-      end
-    end
-
-    if idx >= NODES_PER_AF or (s and s.actorIdx == #s.actors) then
-      -- We've reached the end of the current actors.xml, decrement depth
-      s.cd = s.cd - 1
-      stack:log('s.cd-- (=' .. s.cd .. ')')
+    if idx == NODES_PER_AF and ((not currentActor) or (currentActor.Frag or currentActor.Vert)) then
+      print('we should go back now, we\'ve made the last actor here and no condition statements follow')
+      popStack()
+    else
+      currentActor = nil
     end
   end
 end
@@ -271,7 +242,7 @@ end
 -- Defining actors, actor queue
 
 ---@class Context
----@field actorQueue ({ proxy: unknown, toXML: fun(): AbstractActor | AbstractActorFrame, subContext: Context? })[]
+---@field actorQueue ({ proxy: unknown, toXML: fun(): AbstractActor, subContext: Context? })[]
 ---@field locked boolean @ If locked, prevents new actors from being defined
 local Context = {}
 
@@ -535,7 +506,7 @@ function Context:addChild(frame, child)
   table.insert(subContext.actorQueue, movedActor)
 end
 
----@return (AbstractActor | AbstractActorFrame)[]
+---@return AbstractActor[]
 function Context:toTree()
   local root = {}
 
@@ -582,16 +553,74 @@ local function prettyPrintTree(tree, depth)
   end
 end
 
+---@param actors AbstractActor[]
+---@return AbstractActorFrame
+local function wrapFrame(actors)
+  return {
+    Type = 'ActorFrame',
+    Children = actors
+  }
+end
+
+---@param actors AbstractActor[]
+---@param depth number
+---@param desiredDepth number
+---@return AbstractActor[]
+local function unstack(actors, depth, desiredDepth)
+  if depth < desiredDepth then
+    ---@type AbstractActorFrame[]
+    local frames = {}
+    for _ = 1, NODES_PER_AF do
+      if #actors == 0 then break end
+      table.insert(frames, wrapFrame(unstack(actors, depth + 1, desiredDepth)))
+    end
+    return frames
+  else
+    local children = {}
+    for _ = 1, NODES_PER_AF do
+      ---@type AbstractActorChild | AbstractActorFrame
+      local actor = table.remove(actors, 1)
+      if not actor then break end
+
+      if actor.Type == 'ActorFrame' then
+        local frameChildren = actor.Children
+        local frameDesiredDepth = getMinDepth(#frameChildren)
+        actor.Children = unstack(frameChildren, 1, frameDesiredDepth)
+        table.insert(children, actor)
+      else
+        table.insert(children, actor)
+      end
+    end
+    return children
+  end
+end
+
+---@param tree AbstractActor[]
+---@return AbstractActorFrame
+local function abstractToPhysical(tree)
+  local depth = getMinDepth(#tree)
+  return unstack(tree, 1, depth)
+end
+
 -- Call this after you are done defining your actors.
 ---@param ctx Context
 function M.ready(ctx)
   oat.actor = actorInit
   ctx:lock()
   stack:clear()
-  local tree = ctx:toTree()
-  prettyPrintTree(tree)
-  pushNewLayer(tree)
-  forcedEvaluation = false
+  local abstractTree = ctx:toTree()
+  print('== ABSTRACT TREE: ==')
+  print('')
+  prettyPrintTree(abstractTree)
+  print('')
+  print('== PHYSICAL TREE: ==')
+  print('')
+  local physicalTree = abstractToPhysical(abstractTree)
+  prettyPrintTree(physicalTree)
+  print('')
+  print('== OK; pushing to stack ==')
+  print('')
+  pushNewLayer(physicalTree)
 end
 
 -- For repeat initializations to persist state across Lua state resets.
@@ -612,6 +641,7 @@ end
 
 -- Call this once all of the actors have been initialized
 function M.finalize()
+  print('DONE')
   stack:clear()
   oat.actor = nil
 end
