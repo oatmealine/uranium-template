@@ -57,39 +57,54 @@ design decisions came from experience using prototype versions of it!
 - [Configuration](#configuration)
     - [`hideThemeActors: boolean`](#hidethemeactors-boolean)
 - [Standard library](#standard-library)
-  - [`input`](#input)
-    - [`input.inputType`](#inputinputtype)
-    - [`input.directions`](#inputdirections)
-    - [`input.getInputName(i: inputType): string`](#inputgetinputnamei-inputtype-string)
-    - [`input.keyboardEquivalent`](#inputkeyboardequivalent)
-    - [`input.getInput(i: string, pn: number | nil): number`](#inputgetinputi-string-pn-number--nil-number)
-    - [`input.isDown(i: string, pn: number | nil): number`](#inputisdowni-string-pn-number--nil-number)
-    - [`press(input: inputType, pn: number)`](#pressinput-inputtype-pn-number)
-    - [`release(input: inputType, pn: number)`](#releaseinput-inputtype-pn-number)
-    - [A note about keyboard inputs](#a-note-about-keyboard-inputs)
-  - [`scheduler`](#scheduler)
-    - [`scheduler.schedule(when: number, func: function): number`](#schedulerschedulewhen-number-func-function-number)
-    - [`scheduler.scheduleInTicks(when: number, func: function): number`](#schedulerscheduleintickswhen-number-func-function-number)
-    - [`scheduler.unschedule(i: index): void`](#schedulerunschedulei-index-void)
-    - [`scheduler.unscheduleInTicks(i: index): void`](#schedulerunscheduleinticksi-index-void)
+  - [`aft`](#aft)
+    - [`aft.setupSprite(sprite: Sprite)`](#aftsetupspritesprite-sprite)
+    - [`aft.createSprite(ctx: Context): Sprite`](#aftcreatespritectx-context-sprite)
+    - [`aft.setupAFT(aft: ActorFrameTexture)`](#aftsetupaftaft-actorframetexture)
+    - [`aft.createAFT(ctx: Context): ActorFrameTexture`](#aftcreateaftctx-context-actorframetexture)
+    - [`aft.createEffectStack(ctx: Context): ActorFrameTexture, Sprite`](#aftcreateeffectstackctx-context-actorframetexture-sprite)
   - [`binser`](#binser)
-  - [`mirin`](#mirin)
-  - [`savedata`](#savedata)
-    - [`savedata.initializeModule(name: string, forceIgnore: boolean): void`](#savedatainitializemodulename-string-forceignore-boolean-void)
-      - [Generating a savedata name](#generating-a-savedata-name)
-    - [`savedata.s(data: table, name: string | nil): void`](#savedatasdata-table-name-string--nil-void)
-    - [`savedata.save(instant: boolean): void`](#savedatasaveinstant-boolean-void)
-    - [`savedata.load(): void`](#savedataload-void)
-    - [`savedata.getLastSave(): string[] | nil`](#savedatagetlastsave-string--nil)
-    - [`savedata.enableAutosave(): void`](#savedataenableautosave-void)
+  - [`ease`](#ease)
   - [`env`](#env)
     - [`env.inEditor: boolean`](#envineditor-boolean)
     - [`env.onWine: boolean`](#envonwine-boolean)
-  - [`ease`](#ease)
-  - [`players`](#players)
-  - [`util`](#util)
-  - [`aft`](#aft)
   - [`eternalfile`](#eternalfile)
+  - [`eventhandler`](#eventhandler)
+    - [`EventHandler.new(name: string?): EventHandler`](#eventhandlernewname-string-eventhandler)
+    - [`EventHandler:call(event: string, ...)`](#eventhandlercallevent-string-)
+    - [`EventHandler:on(event: string, f: function)`](#eventhandleronevent-string-f-function)
+    - [`EventHandler:subhandler(name: string?): EventHandler`](#eventhandlersubhandlername-string-eventhandler)
+    - [`EventHandler:orphan()`](#eventhandlerorphan)
+  - [`input`](#input)
+    - [Input types](#input-types)
+    - [`input.isDown(i: string, pn: number?): boolean`](#inputisdowni-string-pn-number-boolean)
+      - [Events](#events)
+        - [`press(input: inputType, pn: number)`](#pressinput-inputtype-pn-number)
+        - [`release(input: inputType, pn: number)`](#releaseinput-inputtype-pn-number)
+    - [A note about keyboard inputs](#a-note-about-keyboard-inputs)
+  - [`mirin`](#mirin)
+  - [`players`](#players)
+  - [`savedata`](#savedata)
+    - [`savedata.init(name: string)`](#savedatainitname-string)
+    - [`savedata.s(data: table, name: string?): table`](#savedatasdata-table-name-string-table)
+    - [`savedata.load()`](#savedataload)
+    - [`savedata.save(instant: boolean?)`](#savedatasaveinstant-boolean)
+    - [`savedata.getLastSave(): string[] | nil`](#savedatagetlastsave-string--nil)
+    - [`savedata.enableAutosave()`](#savedataenableautosave)
+    - [`savedata.saveNextFrame: boolean`](#savedatasavenextframe-boolean)
+      - [Events](#events-1)
+        - [`save()`](#save)
+        - [`saveFinished()`](#savefinished)
+  - [`tick`](#tick)
+    - [`Tick.new()`](#ticknew)
+    - [`Tick:update(dt: number)`](#tickupdatedt-number)
+    - [`Tick:func(delay: number, func: function, ...)`](#tickfuncdelay-number-func-function-)
+    - [`Tick:perframe(delay: number, dur: number, func: function)`](#tickperframedelay-number-dur-number-func-function)
+    - [`Tick:ease(delay: number, dur: number, ease: function, from: number, to: number, func: function)`](#tickeasedelay-number-dur-number-ease-function-from-number-to-number-func-function)
+    - [`Tick:lock(callback: function?)`](#ticklockcallback-function)
+    - [`Tick:aux(default: number): Aux`](#tickauxdefault-number-aux)
+    - [`Aux:ease(delay: number, duration: number, ease: function, value: number)`](#auxeasedelay-number-duration-number-ease-function-value-number)
+    - [`Aux:add(delay: number, duration: number, ease: function, value: number)`](#auxadddelay-number-duration-number-ease-function-value-number)
 - [Examples](#examples)
   - [The obligatory](#the-obligatory)
   - [Simple platformer base](#simple-platformer-base)
@@ -575,244 +590,53 @@ section aims to comprehensively document them all.
 > repo](https://github.com/oatmealine/jadelib), although with less
 > documentation and support.
 
-TODO update with v2 modules
-TODO sort these
+### `aft`
 
-### `input`
-
-TODO update with v2 and finalize changes
-
-`input` is the library that handles everything input-related. Its main feature is providing the `press` and `release` callbacks, but you can also access the raw inputs with the `inputs` table (each value is `-1` if the key is not pressed and the time at which it was pressed, estimated with `t` if it is pressed) and the _raw_ inputs (ignoring callback returns) with `rawInputs`.
-
-#### `input.inputType`
-
-The `input` module can detect every input that the game can pass through the [`StepP<player><input><action>MessageCommand`](https://craftedcart.gitlab.io/notitg_docs/message_commands.html#stepp-player-input-action-messagecommand). This list is:
-```
-MenuLeft
-MenuRight
-MenuUp
-MenuDown
-Start
-Select
-Back
-Coin
-Operator
-Left
-Right
-Up
-Down
-UpLeft
-UpRight
-ActionLeft
-ActionRight
-ActionUp
-ActionDown
-Action1
-Action2
-Action3
-Action4
-Action5
-Action6
-Action7
-Action8
-MenuStart
-```
-
-All of these inputs are neatly stored away in an enum called `inputType`. For instance, if you wanted to check if an input was `Start`, you would do:
+An AFT setup library, for convenience.
 
 ```lua
-local isStart = i == input.inputType.Start
+local aftlib = 'stdlib.aft'
+
+-- aftSprite is a Sprite, set to the texture of aft, an ActorFrameTexture
+local aft, aftSprite = aftlib.createEffectStack(ctx)
 ```
 
-#### `input.directions`
+#### `aft.setupSprite(sprite: Sprite)`
 
-For your convinience, cardinal inputs are given a simple directions enum:
-```lua
-self.directions = {
-  [self.inputType.Left] = {-1, 0},
-  [self.inputType.Down] = {0, 1},
-  [self.inputType.Up] = {0, -1},
-  [self.inputType.Right] = {1, 0}
-}
-```
+Sets up a Sprite for textures from AFTs, scaling it with the display resolution.
 
-#### `input.getInputName(i: inputType): string`
+#### `aft.createSprite(ctx: Context): Sprite`
 
-Gets the name of an input. The reverse of indexing the `inputType` enum.
+Creates a Sprite for textures from AFTs, scaling it with the display resolution.
+Like `setupSprite`, but includes creating the Sprite from a Context.
 
-#### `input.keyboardEquivalent`
+#### `aft.setupAFT(aft: ActorFrameTexture)`
 
-Mappings for the default keybinds for most keys. It's recommended to put them alongside the in-game representation in UIs to avoid confusion:
+Sets up an AFT that will capture the entire scene when drawn.
 
-```lua
-local inputName = input.getInputName(i)
-local keyboardInput = input.keyboardEquivalent[i]
-if keyboardInput then
-  inputName = inputName .. ' (defaults to ' .. keyboardInput .. ')'
-end
-local dialog = 'Press ' .. inputName .. ' to boop' --> 'Press Start (defaults to Enter) to boop'
-```
+#### `aft.createAFT(ctx: Context): ActorFrameTexture`
 
-#### `input.getInput(i: string, pn: number | nil): number`
+Creates an AFT that will capture the entire scene when drawn. Like `setupAFT`,
+but includes creating the AFT from a Context.
 
-Shorthand for accessing `input.inputs` directly. If `pn` is not provided, it gets either of the players' inputs, prioritizing any that are held down.
-```lua
-input.inputs[1][input.inputType.Left] == input.getInput('Left', 1)
-```
+#### `aft.createEffectStack(ctx: Context): ActorFrameTexture, Sprite`
 
-#### `input.isDown(i: string, pn: number | nil): number`
-
-Shorthand for `input.getInput(i, pn) ~= -1`. If `pn` is not provided, players are ignored and it checks if either of the players have the input held down
-
-#### `press(input: inputType, pn: number)`
-Called when a player presses on a certain key.
-
-#### `release(input: inputType, pn: number)`
-Same as [`press`](#pressinput-inputtype), except for releasing a key.
-
-#### A note about keyboard inputs
-
-Working with left/down/up/right inputs can be tiring at times and it's hard to always fit designs to work with them. However, if you're willing to take a little compromise, you can also _access all keyboard inputs_. However, it's worth noting that this **depends on NotITG's Simply Love** (any forks will work fine too) both for your development environment and for all players. That being said, if you want to access the keyboard API, this is how you do it:
-
-```lua
--- check if the user is using simply love at all
-if not stitch then error('This modfile requires the Simply Love theme! https://github.com/TaroNuke/Simply-love-NotITG-ver.-') end
-
-keyboard = stitch('lua.keyboard')
-
--- table that contains every keyboard key as the key and a boolean as the value
-local buffer = keyboard.buffer
--- for example:
-local isDebugKeyHeld = buffer['F3']
-
--- contains booleans for shift, ctrl, alt, win and altgr
-local special = keyboard.special
-local isDebugKeyAndShiftHeld = isDebugKeyHeld and special.shift
-```
-
-### `scheduler`
-
-TODO update with v2 changes
-also maybe switch this to another scheduler
-
-A simple scheduler.
-
-```lua
-local scheduler = require('stdlib.scheduler')
-```
-
-#### `scheduler.schedule(when: number, func: function): number`
-
-Schedules a function to run in a specific amount of time. `when` is in seconds.
-
-#### `scheduler.scheduleInTicks(when: number, func: function): number`
-
-Schedules a function to run in a specific amount of `update` calls/ticks.
-
-#### `scheduler.unschedule(i: index): void`
-
-Unschedules a function. Use the index returned to you when originally scheduling the function.
-
-#### `scheduler.unscheduleInTicks(i: index): void`
-
-Unschedules a function in ticks. Use the index returned to you when originally scheduling the function.
+Creates an AFT with `createAFT`, a sprite with `createSprite`, and assigns the
+sprite a texture from the AFT, returning both in that order.
 
 ### `binser`
 
 A NotITG Lua port of [binser](https://github.com/bakpakin/binser). Used for
 [savedata](#savedata) serialization.
 
-### `mirin`
+### `ease`
 
 _Exports globals_
 
-A copy of the [Mirin Template by
-XeroOl](https://github.com/XeroOl/notitg-mirin/) (currently at 5.0.1), shoved in
-and ported for your convinience. Works exactly the same as regular Mirin.
-
-### `savedata`
-
-TODO update with and finalize v2 changes
-
-_Defines callbacks_
-
-A complete library for saving and loading arbitrary data to the user's profile.
-Uses [binser](#binser) for serialization. See [Savedata
-example](#savedata-example) for an example of how to use this library.
-
-#### `savedata.initializeModule(name: string, forceIgnore: boolean): void`
-
-Initializes the savedata module. `forceIgnore` makes the function ignore name checks, **but please don't use it unless you know what you're doing!!!**
-
-##### Generating a savedata name
-
-Ideally, you'd generate a savedata name by [generating a random 16-character
-string](https://www.random.org/strings/?num=1&len=16&digits=on&upperalpha=on&loweralpha=on&unique=on&format=plain&rnd=new)
-and appending it to your game's name. For instance:
-
-```lua
-savedata.initializeModule('myGameName_doAmaUOBIjiaSWyz')
-```
-
-The reason this is done is to avoid name collision - all modfiles share a global
-profile namespace to put their saved data in. To prevent it as much as possible,
-I've decided to force the user to generate a unique name that _most likely_
-won't be taken by anything else. `forceIgnore` completely ignores the
-16-character and special/normal character checks.
-
-#### `savedata.s(data: table, name: string | nil): void`
-
-Creates a new module in your savedata. It uses `data` for defaults, then uses it
-for writing savedata to it and reading savedata from it; for instance, this
-would be correct usage:
-
-```lua
-local counter = {
-  n = 0
-}
-
-savedata.s(counter)
-
-uranium.on('init', function()
-  print(counter.n) --> could be different from 0!
-end)
-
-uranium.on('update', function()
-  counter.n = counter.n + 1 -- this will be saved the next time savedata.save is called
-end)
-```
-
-By default, the name that's used for your module will be the folder your Lua
-file is located in, followed by its filename. **This means you should not rely
-on the automatic name generation if your Lua file rests at the root of your file
-or if you're calling this function via `loadstring` or similar** as it will
-create unpredictable module names that will change between setups and sometimes
-even game restarts. You can pass in any string you like to `name`, as long as
-it's unique in your project, to override this behavior.
-
-#### `savedata.save(instant: boolean): void`
-
-Saves the savedata onto the user's profile. It waits a single tick to do so and
-sets the boolean `saveNextFrame` to `true`; this is so that your game can
-display a loading frame for the temporary lagspike, as chances are, on lower-end
-setups with hard drives, this will momentarily freeze the game as it writes the
-profile. You can make it instantly save with `instant`.
-
-#### `savedata.load(): void`
-
-Loads the savedata. _Shouldn't be called manually; this is automatically called
-on [`init()`](#init)._
-
-#### `savedata.getLastSave(): string[] | nil`
-
-Gets the last save time that persists between game restarts in the format
-`{hour, minute, date, month, year}`. If the game has not saved once, returns
-`nil`.
-
-#### `savedata.enableAutosave(): void`
-
-Enables autosave via [`exit()`](#exit). Should hopefully mean data should never
-get lost.
+A direct copy of [Mirin Template's
+`ease.lua`](https://github.com/XeroOl/notitg-mirin/blob/master/template/ease.lua),
+for convinience. See the docs for those
+[**here**](https://xerool.github.io/notitg-mirin/docs/eases.html).
 
 ### `env`
 
@@ -824,156 +648,441 @@ Is `true` if the file is being played in the editor. Useful for debugging stuff.
 
 #### `env.onWine: boolean`
 
-Is `true` if the player is playing NotITG through Wine or similar.
-
-### `ease`
-
-_Exports globals_
-
-A direct copy of [Mirin Template's
-`ease.lua`](https://github.com/XeroOl/notitg-mirin/blob/master/template/ease.lua),
-for convinience. See the docs for those
-[**here**](https://xerool.github.io/notitg-mirin/docs/eases.html).
-
-### `players`
-
-TODO update with and finalize v2 changes
-also say this shouldn't go outside `ready`
-
-_Exports globals_
-
-Pulls in the players as `P[1-8]` and `P<1-8>`.
-
-```lua
-require('stdlib.players')
-P1:hidden(1)
-P2:hidden(1)
-```
-
-### `util`
-
-TODO murder kill
-
-_Exports globals_
-
-A big ol' module that holds a bunch of useful functions. These were too specific
-or too niche to go in any singular module; so they're all here now.
-
-There's _a bit too many_ functions to document, so I'd recommend just looking
-through the source code. I promise it doesn't bite.
-
-### `aft`
-
-TODO update with and finalize v2 changes
-
-An AFT setup library. Sets up sprites and AFTs with `sprite` and `aft`, or
-all-in-one with `aftSetup`, making them ready for texturing use.
-
-```lua
-local aftlib = require('stdlib.aft')
-
--- aftSprite is a Sprite, set to the texture of aft, an ActorFrameTexture
-local aft, aftSprite = aftlib.aftSetup()
-```
+Is `true` if the player is playing NotITG through Wine or derivative
+compatibility tools like Proton or Crossover.
 
 ### `eternalfile`
 
-TODO rec to put this in `ready`
-
-A single function which turns your file into an eternal, neverending file, until
-the player puts it out of its misery by exiting. The current beat will always go
-from 0 to 1 and start over once this is enabled. This also sets the notedata to
-nothing to avoid hitting padding mines.
+A module which when imported turns your file into an eternal, neverending file,
+until the player puts it out of its misery by exiting. The current beat will
+always go from 0 to 1 and start over once this is enabled. This also sets the
+notedata to nothing to avoid hitting padding mines.
 
 ```lua
-require('stdlib.eternalfile')()
+require 'stdlib.eternalfile'
 ```
 
-## Examples
+### `eventhandler`
 
-TODO update with v2 changes
+A generic event handler with support for instanced handlers, subhandlers and
+early returns. An instance of this class is used for the `uranium.events`
+default events handler.
+
+This module exports a single class, which is `EventHandler`, documented below.
+
+#### `EventHandler.new(name: string?): EventHandler`
+
+Creates a new `EventHandler`. The name is optional, but is stored for your own
+use and shows up in `tostring` calls.
+
+#### `EventHandler:call(event: string, ...)`
+
+Call a defined callback. Returns the first value that any callback returns.
+
+#### `EventHandler:on(event: string, f: function)`
+
+Register a callback handler.
+
+#### `EventHandler:subhandler(name: string?): EventHandler`
+
+Create a subhandler, passing all the events of this handler to it.
+
+```lua
+local handler = EventHandler.new()
+local subhandler = handler:subhandler()
+
+-- callbacks returned early in the subhandler don't affect the parent
+
+subhandler:on('event', function()
+  print('a')
+  return
+end)
+subhandler:on('event', function()
+  print('b')
+  return
+end)
+handler:on('event', function()
+  print('c')
+  return
+end)
+
+handler:call('event') --> 'a', 'c'
+```
+
+#### `EventHandler:orphan()`
+
+Orphan a subhandler, not letting it recieve events from its parent anymore.
+
+### `input`
+
+`input` is the library that handles everything input-related. It provides the
+`press` and `release` callbacks under its event handler.
+
+Inputs do not get duplicated if BothAtOnce is on, so if this is your desired
+behavior, you should implement this manually.
+
+#### Input types
+
+The `input` module can detect every input that the game can pass through the
+[`StepP<player><input><action>MessageCommand`](https://craftedcart.gitlab.io/notitg_docs/message_commands.html#stepp-player-input-action-messagecommand).
+Here are the possible values (and default binds, for convenience):
+
+| Input       | P1              | P2      | Notes |
+| ----------- | --------------- | ------- | ----- |
+| Left        | Left            | KP4     | |
+| Down        | Down            | KP2     | |
+| Up          | Up              | KP8     | |
+| Right       | Right           | KP6     | |
+| MenuStart   | Enter           | KPEnter | written in-game as 'Start'. `MenuStart` may sound like a distinct input from a theoretical `Start`, but no such input exists |
+| Select      | RShift          | KP0     | |
+| Back        | Esc             | NumLock | doesn't register, as it will cause you to back out of the file |
+| Coin        | F1              |         | written in-game as 'Insert Coin' |
+| Operator    | Insert, ScrLock |         | doesn't register, as it will cause you to back out of the file |
+| UpLeft      |                 | Num7    |  |
+| UpRight     |                 | Num9    |  |
+| MenuLeft    | Delete          | KP/     |  |
+| MenuDown    | End             | KP+     |  |
+| MenuUp      | Home            | KP-     |  |
+| MenuRight   | PgDn            | KP*     |  |
+| ActionLeft  |                 |         | also prev. known as `BullshitLeft` |
+| ActionDown  |                 |         | also prev. known as `BullshitDown` |
+| ActionUp    |                 |         | also prev. known as `BullshitUp` |
+| ActionRight |                 |         | also prev. known as `BullshitRight` |
+| Action1     | 1               |         |  |
+| Action2     | 2               |         |  |
+| Action3     | 3               |         |  |
+| Action4     | 4               |         |  |
+| Action5     | 5               |         |  |
+| Action6     | 6               |         |  |
+| Action7     | 7               |         |  |
+| Action8     | 8               |         |  |
+
+#### `input.isDown(i: string, pn: number?): boolean`
+
+Checks if an input is currently held down. If `pn` is not provided, players are
+ignored and it checks if either of the players have the input held down.
+
+##### Events
+
+Accessed under `input.events`, here are the available events:
+
+###### `press(input: inputType, pn: number)`
+
+Called when a player presses on a certain key.
+
+###### `release(input: inputType, pn: number)`
+
+Same as [`press`](#pressinput-inputtype-pn-number), except for releasing a key.
+
+#### A note about keyboard inputs
+
+Working with left/down/up/right inputs can be tiring at times and it's hard to
+always fit designs to work with them. However, if you're willing to take a
+little compromise, you can also _access all keyboard inputs_. However, it's
+worth noting that this **depends on NotITG's Simply Love** (any forks will work
+fine too) both for your development environment and for all players; so ideally,
+you should only use this for debugging and development tools.
+
+```lua
+-- check if the user is using simply love at all
+if not stitch then return end
+
+local keyboard = stitch('lua.keyboard')
+
+-- table that contains every keyboard key as the key and a boolean as the value
+local buffer = keyboard.buffer
+-- for example:
+local isDebugKeyHeld = buffer['F3']
+
+-- contains booleans for shift, ctrl, alt, win and altgr
+local special = keyboard.special
+local isDebugKeyAndShiftHeld = isDebugKeyHeld and special.shift
+```
+
+### `mirin`
+
+_Exports globals_
+
+A copy of the [Mirin Template by
+XeroOl](https://github.com/XeroOl/notitg-mirin/) (currently at 5.0.1), shoved in
+and ported for your convinience. Works exactly the same as regular Mirin.
+
+### `players`
+
+Pulls in player actors as a table of `player number -> Player`. These players
+are also proxies, similar to actors created with Contexts, except that they only
+resolve on the [`ready`](#ready) event instead of the [`init`](#init) event.
+
+There are 8 actors in the table. Players may not exist if the player has entered
+singleplayer (P2, P4, P6, P8 if they entered the P1 side, and P1, P3, P5, P7 if
+they entered the P2 side); thus, you should not consider iterating over this
+table with `ipairs` safe unless your file has an explicit 2P check.
+
+```lua
+local players = require 'stdlib.players'
+players[1]:hidden(1)
+players[2]:hidden(1)
+```
+
+### `savedata`
+
+A complete library for saving and loading arbitrary data to the user's profile.
+Uses [binser](#binser) for serialization. See [Savedata
+example](#savedata-example) for an example of how to use this library.
+
+#### `savedata.init(name: string)`
+
+Initializes the save module that'll be used across this entire file.
+
+For the name, come up with a unique identifier; either reverse DNS or a random
+alphanumeric string are recommended. This will be used across an entire NotITG
+install to identify the game's saves, so make sure to try and minimize
+collisions.
+
+#### `savedata.s(data: table, name: string?): table`
+
+Creates a new module in your savedata. It uses the table passed into `data` for
+defaults and structure of the save (also returning it for convenience), then
+uses it for writing savedata to it and reading savedata from it. Do not
+re-define the table, as that'll make a table with a different pointer, therefore
+disconnecting it from the module.
+
+```lua
+local counter = savedata.s({
+  n = 0
+})
+
+events:on('init', function()
+  print(counter.n) --> 0, or something else if the saved data differs from the default
+end)
+
+events:on('update', function()
+  counter.n = counter.n + 1 -- this will be saved the next time savedata.save is called
+end)
+```
+
+By default, the name that's used for your module will be path to the Lua file
+this function is called from, relative to the modfile root. **This means you
+should not rely on the automatic name generation if you're calling this function
+twice in the same file, or calling this function via `loadstring` or similar**
+as it will create unpredictable module names that will change between setups or
+overlap with other module names.
+
+You can pass in any string you like to `name`, as long as it's unique in your
+project, to override this behavior.
+
+#### `savedata.load()`
+
+Loads the savedata. _Shouldn't be called manually; this is automatically called
+on [`init()`](#init)._
+
+#### `savedata.save(instant: boolean?)`
+
+Saves the savedata onto the user's profile. It waits a single tick to do so and
+sets the boolean `saveNextFrame` to `true`; this is so that your game can
+display a loading frame for the temporary lagspike, as chances are, on lower-end
+setups with hard drives or exceptionally large profiles, this will momentarily
+freeze the game as it writes the profile. You can make it instantly save with
+`instant`.
+
+#### `savedata.getLastSave(): string[] | nil`
+
+Gets the last save time that persists between game restarts in the format
+`{hour, minute, date, month, year}`. If the game has not saved once, returns
+`nil`.
+
+#### `savedata.enableAutosave()`
+
+Enables autosave via the [`exit`](#exit) event. Should hopefully mean data
+should never get lost, but the event is pretty patchy due to engine limitations,
+so this is wishful thinking at best.
+
+#### `savedata.saveNextFrame: boolean`
+
+If the game is saved with `instant` set to false / nil, this will be set to
+`true` until the next frame. You can use this to quickly check when to display a
+loading prompt.
+
+##### Events
+
+Accessed under `savedata.events`, here are the available events:
+
+###### `save()`
+
+Called when a save is triggered.
+
+###### `saveFinished()`
+
+Called when a save finishes saving.
+
+### `tick`
+
+A scheduler / animation / easing library. If you've used Mirin, you'll likely be
+familiar with this interface.
+
+This module exports a single class, `Tick`.
+
+#### `Tick.new()`
+
+Creates a new `Tick` instance. You'll need to manually update every instance in
+your `update` event callback.
+
+#### `Tick:update(dt: number)`
+
+Updates the instance, processing whatever functions need to called. You can
+technically use any unit as the deltatime, like beats or frames; but your
+scheduled functions will then use those same units aswell.
+
+#### `Tick:func(delay: number, func: function, ...)`
+
+Schedules a function to be called in `delay`. Any extra arguments passed will be
+passed to the function. If `delay` is 0 or negative, this call will be delayed
+by a frame.
+
+#### `Tick:perframe(delay: number, dur: number, func: function)`
+
+Schedules a function to be repeatedly called every frame in `delay` for `dur`.
+The current internally stored time of the `Tick` instance will be passed into
+the function, alongside with the "progress" of the perframe (`time since start`
+/ `dur`).
+
+#### `Tick:ease(delay: number, dur: number, ease: function, from: number, to: number, func: function)`
+
+Schedules a function to be repeatedly called every frame in `delay` for `dur`,
+easing some value from `from` to `to` with the easing function `ease`. The eased
+value will be passed into the function.
+
+The easing function is some function that takes in `a` from 0.0 to 1.0 and
+outputs some `b` from 0.0 to 1.0. An easing function that returns `b=0` for an
+input of `a>=1` is called "transient". The [`ease`](#ease) module has several of
+these ready for use.
+
+The function is guaranteed to be called once at the end of its lifecycle with
+1.0, or 0.0 if the easing function is transient.
+
+#### `Tick:lock(callback: function?)`
+
+Locks the `Tick`, preventing any further edits to be made to the scheduled
+functions. If `callback` is passed, it will be called once every scheduled
+function lapses.
+
+#### `Tick:aux(default: number): Aux`
+
+Creates a new `Aux`, which is an arbitrary easable value, acting in sync with
+the parent `Tick`. If you've used a definemod in Mirin, this is something like
+that.
+
+`Aux` values support overlapping eases.
+
+#### `Aux:ease(delay: number, duration: number, ease: function, value: number)`
+
+Similar to `Tick:ease`, except acting upon this specific value. The `from` value
+is assumed to be the current value at the time of execution.
+
+#### `Aux:add(delay: number, duration: number, ease: function, value: number)`
+
+Similar to `Aux:ease`, except adding to the value instead of setting it to a new
+value.
+
+## Examples
 
 Here are a couple of examples. All of these are standalone `main.lua` files that you can plug in and view the results of!
 
 ### The obligatory
+
 ```lua
-local text = BitmapText('common', 'Hello, world!')
+local uranium = require 'uranium'
+local ctx = uranium.ctx
+local events = require 'uranium.events'
+
+local text = ctx:BitmapText('common', 'Hello, world!')
 text:xy(scx, scy)
 
-uranium.on('update', function()
+events:on('update', function()
   text:Draw()
 end)
 ```
 
 ### Simple platformer base
-```lua
-require('stdlib.vector2D')
-local input = require('stdlib.input')
 
--- constants are just those that felt nice to me. this is completely valid to do in gamedev
+```lua
+local uranium = require 'uranium'
+local ctx = uranium.ctx
+local events = require 'uranium.events'
+
+local input = require 'stdlib.input'
+
+-- constants are just those that felt nice to me. this is completely valid to do
+-- in gamedev
 local DAMPING = 1/9500
-local SPEED = 2
-local JUMP_FORCE = 32
-local GRAVITY = 123
+local SPEED = 6000
+local JUMP_FORCE = 1600
+local GRAVITY = 7000
 local PLAYER_SIZE = 50
 
 local groundY = sh * 0.8
 
-local protagActor = Quad()
+local protagActor = ctx:Quad()
 protagActor:zoomto(PLAYER_SIZE, PLAYER_SIZE)
-local ground = Quad()
+local ground = ctx:Quad()
 ground:zoomto(sw, 4)
 ground:xy(scx, groundY + PLAYER_SIZE/2 + 4/2)
 
-local coverQuad = Quad()
+local coverQuad = ctx:Quad()
 coverQuad:diffuse(0, 0, 0, 0.6)
 coverQuad:xywh(scx, scy, sw, sh)
 
-local pos = vector(scx, groundY)
-local vel = vector(0, 0)
+local posX = scx
+local posY = groundY
+local velX = 0
+local velY = 0
 local hasHitGround = true -- let's define this so that you can't jump mid-air
 
 -- called whenever the player recieves an input
-uranium.on('press', function(i)
-  if i == input.inputType.Up and hasHitGround then
-    vel.y = vel.y - JUMP_FORCE
+input.events:on('press', function(key)
+  if key == 'Up' and hasHitGround then
+    velY = velY - JUMP_FORCE
     hasHitGround = false
     return true -- input eaten! further callbacks won't recieve this
   end
 end)
 
-uranium.on('update', function(dt)
+events:on('update', function(dt)
   -- respond to l/r inputs
   if input.isDown('Left') then
-    vel.x = vel.x - SPEED
+    velX = velX - SPEED * dt
   end
   if input.isDown('Right') then
-    vel.x = vel.x + SPEED
+    velX = velX + SPEED * dt
   end
 
   -- apply gravity
-  vel.y = vel.y + GRAVITY * dt
+  velY = velY + GRAVITY * dt
 
   -- update position, apply damping to velocity
-  pos = pos + vel
-  vel = vel * math.pow(DAMPING, dt)
+  posX = posX + velX * dt
+  posY = posY + velY * dt
+
+  local velScale = math.pow(DAMPING, dt)
+  velX = velX * velScale
+  velY = velY * velScale
 
   -- make sure the player can't clip through the ground
-  if pos.y >= groundY then
-    pos.y = groundY
-    if vel.y >= 0 then vel.y = 0 end
+  if posY >= groundY then
+    posY = groundY
+    if velY >= 0 then velY = 0 end
     hasHitGround = true
   end
 
   -- make sure the player can't leave the screen on accident
-  pos.x = math.min(pos.x, sw - PLAYER_SIZE/2)
-  pos.x = math.max(pos.x, 0  + PLAYER_SIZE/2)
+  posX = math.min(posX, sw - PLAYER_SIZE/2)
+  posX = math.max(posX, 0  + PLAYER_SIZE/2)
 
   -- slightly cover up the regular nitg gameplay
   coverQuad:Draw()
 
   -- draw them!
-  protagActor:xy(pos.x, pos.y)
+  protagActor:xy(posX, posY)
   protagActor:Draw()
 
   -- draw the ground
@@ -983,66 +1092,76 @@ end)
 
 ### AFTs
 
-_VSync recommended_
-
 ```lua
-local aftSetup = require('stdlib.aft')
-require('stdlib.color')
-require('stdlib.vector2D')
+local uranium = require 'uranium'
+local ctx = uranium.ctx
+local events = require 'uranium.events'
 
-local coverQuad = Quad()
+local aftSetup = require 'stdlib.aft'
+
+local coverQuad = ctx:Quad()
 coverQuad:diffuse(0, 0, 0, 1)
 coverQuad:xywh(scx, scy, sw, sh)
 
-local testQuad = Quad()
+local testQuad = ctx:Quad()
 testQuad:zoom(50)
 
-local aft = ActorFrameTexture()
+local aft, sprite = aftSetup.createEffectStack(ctx)
 
-local aftSprite = Sprite()
-aftSetup.sprite(aftSprite)
-aftSprite:diffusealpha(0.99)
-aftSprite:zoom(1.01)
-aftSprite:rotationz(0.2)
+sprite:diffusealpha(0.99)
+sprite:zoom(1.01)
+sprite:rotationz(0.2)
 
-aft:addcommand('Init', function(self)
-  aftSetup.aft(aft) -- put this here; else it'll recreate it every frame!
-  aftSprite:SetTexture(self:GetTexture())
-end)
+local AFT_FPS = 60
 
-local text = BitmapText('common', 'uranium template!')
-text:xy(scx, scy)
+local t = 0
+local accum = 0
 
-uranium.on('update', function(dt)
+events:on('update', function(dt)
+  t = t + dt
+
   coverQuad:Draw()
 
-  aftSprite:Draw()
+  sprite:Draw()
 
-  local rainbow = shsv(t * 1.2, 0.5, 1)
+  local r, g, b =
 
-  testQuad:xy((vectorFromAngle(t * 160, 100) + vector(scx, scy)):unpack())
-  testQuad:diffuse(rainbow:unpack())
+    0.75 + 0.25 * math.cos(t),
+    0.75 + 0.25 * math.cos(t - 2/3 * math.pi),
+    0.75 + 0.25 * math.cos(t - 4/3 * math.pi)
+
+  local x, y = math.cos(t), math.sin(t)
+  testQuad:xy(scx + 80 * x, scy + 80 * y)
+  testQuad:diffuse(r, g, b, 1)
   testQuad:zoom(50 * math.random())
   testQuad:Draw()
 
-  aft:Draw()
-
-  text:Draw()
+  -- lock the aft fps
+  accum = accum + dt
+  if accum > 1/AFT_FPS then
+    accum = 0
+    aft:Draw()
+  end
 end)
 ```
 
 ### Shader test
 
 ```lua
+local uranium = require 'uranium'
+local ctx = uranium.ctx
+local events = require 'uranium.events'
+local Proxy = require 'uranium.actors.proxy'
+
 -- define a sprite
-local sprite = Sprite('docs/uranium.png')
+local sprite = ctx:Sprite('docs/uranium.png')
 sprite:xy(scx, scy)
 sprite:zoom(0.4)
 sprite:rotationz(0)
 sprite:diffusealpha(1)
 
 -- add our heat shader
-local shader = Shader([[
+local shader = ctx:Shader([[
 #version 120
 
 // took the common heat.frag and integrated simplex noise into it
@@ -1090,9 +1209,17 @@ void main() {
   gl_FragColor = col * color;
 }
 ]])
-setShader(sprite, shader)
 
-uranium.on('update', function()
+events:on('init', function()
+  print(shader)
+  sprite:SetShader(Proxy.getRaw(shader))
+end)
+
+local t = 0
+
+events:on('update', function(dt)
+  t = t + dt
+
   shader:uniform1f('yo', 1)
   shader:uniform1f('scale', 0.25)
 
@@ -1103,7 +1230,8 @@ uranium.on('update', function()
   sprite:diffusealpha(0.6)
   sprite:Draw()
 
-  reset(sprite)
+  sprite:zoom(0.4)
+  sprite:diffusealpha(1)
   shader:uniform1f('yo', 0)
   sprite:Draw()
 end)
@@ -1112,35 +1240,38 @@ end)
 ### Savedata example
 
 ```lua
-local input = require('stdlib.input')
-local savedata = require('stdlib.savedata')
+local uranium = require 'uranium'
+local ctx = uranium.ctx
+local events = require 'uranium.events'
 
-savedata.initializeModule('example_tTsrDBMgsA5eWzaZ') -- change this!!
+local input = require 'stdlib.input'
+local savedata = require 'stdlib.savedata'
 
-local save = {
+savedata.init('example_tTsrDBMgsA5eWzaZ') -- change this!!
+
+local save = savedata.s({
   leftPresses = 0,
   rightPresses = 0,
-}
+})
 
-savedata.s(save)
+local text = ctx:BitmapText('common', '')
 
-local text = BitmapText('common', '')
-text:xy(scx, scy)
-
-uranium.on('press', function(key)
-  if key == input.inputType.Left then
+input.events:on('press', function(key)
+  if key == 'Left' then
     save.leftPresses = save.leftPresses + 1
-  elseif key == input.inputType.Right then
+  elseif key == 'Right' then
     save.rightPresses = save.rightPresses + 1
-  elseif key == input.inputType.Down then
+  elseif key == 'Down' then
     savedata.save()
   end
 end)
 
-uranium.on('update', function(dt)
+events:on('update', function(dt)
+  text:xy(scx, scy)
   text:settext(
     'left presses: ' .. save.leftPresses .. '\n' ..
-    'right presses: ' .. save.rightPresses
+    'right presses: ' .. save.rightPresses .. '\n' ..
+    'press down to save'
   )
   text:Draw()
 
@@ -1155,20 +1286,25 @@ end)
 ### Simple ActorFrame setup
 
 ```lua
-local af = ActorFrame()
+local uranium = require 'uranium'
+local rootCtx = uranium.ctx
+
+local events = require 'uranium.events'
+local actors = require 'uranium.actors'
+local Context = actors.Context
+
+local af = rootCtx:ActorFrame()
 af:xy(scx, scy)
+local ctx = Context.getContext(af)
 
-local sprite = Sprite('docs/uranium.png')
-addChild(af, sprite)
-sprite:zoom(0.4)
-sprite:glow(1, 1, 1, 0)
+local sprite = ctx:Sprite('docs/uranium.png')
 
-local quadsAF = ActorFrame()
-addChild(af, quadsAF)
+local quadsAF = ctx:ActorFrame()
+local quadCtx = Context.getContext(quadsAF)
 
 local quads = {}
 for i = 1, 50 do
-  local q = Quad()
+  local q = quadCtx:Quad()
   q:zoom(math.random(30, 50))
   q:xy(math.random(-200, 200), math.random(-200, 200))
   q:diffusealpha(0.7)
@@ -1176,10 +1312,11 @@ for i = 1, 50 do
   q:rotationy(math.random(0, 360))
   q:rotationz(math.random(0, 360))
   table.insert(quads, q)
-  addChild(quadsAF, q)
 end
 
-setDrawFunction(quadsAF, function()
+local t = 0
+
+quadsAF:SetDrawFunction(function()
   for _, v in ipairs(quads) do
     v:Draw()
   end
@@ -1187,7 +1324,7 @@ setDrawFunction(quadsAF, function()
   quadsAF:rotationz(-t * 30)
 end)
 
-setDrawFunction(af, function()
+af:SetDrawFunction(function()
   quadsAF:Draw()
 
   af:rotationz(t * 90)
@@ -1195,14 +1332,21 @@ setDrawFunction(af, function()
 
   sprite:xy(math.cos(t) * 100, math.sin(t) * 100)
 
-  sprite:zoom(sprite:GetZoom() * 1.1)
+  sprite:zoom(0.45)
   sprite:glow(1, 1, 1, 1)
   sprite:Draw()
-  reset(sprite)
+
+  sprite:zoom(0.4)
+  sprite:glow(1, 1, 1, 0)
   sprite:Draw()
 end)
 
-uranium.on('update', function()
+events:on('init', function()
+  print(af, quadsAF)
+end)
+
+events:on('update', function(dt)
+  t = t + dt
   af:Draw()
 end)
 ```
@@ -1210,5 +1354,5 @@ end)
 ## Credits
 
 **XeroOl** - Mirin Template was a massive design inspiration; early stages of this template borrowed lots of code from it and the current `require` implementation has been grabbed directly from it<br>
-**Mayflower**, **Aura**, **Jollysivie** - Testing, design help<br>
-**mangoafterdawn** - The Uranium Template logo!<br>
+**Mayflower**, **Aura**, **Jollysivie**, **Rya** - Testing, design help<br>
+**mangoafterdawn** - The Uranium Template logo<br>

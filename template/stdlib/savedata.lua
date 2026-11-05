@@ -12,10 +12,12 @@ local loadedSavedata = false
 
 self.saveNextFrame = false
 
--- for the name, come up with a unique identifier; either reverse DNS or a
--- random alphanumeric string are recommended. this will be used across an
+-- Initializes the save module that'll be used across this entire file.
+--
+-- For the name, come up with a unique identifier; either reverse DNS or a
+-- random alphanumeric string are recommended. This will be used across an
 -- entire NotITG install to identify the game's saves, so make sure to try and
--- minimize collisions
+-- minimize collisions.
 ---@param name string
 function self.init(name)
   if loadedSavedata then
@@ -30,9 +32,35 @@ local function assertInitialized()
   end
 end
 
--- creates a new save module using the data given as the default savedata aswell
--- as the save structure. the table passed and returned will then be written to
--- when the save loads, and read from when it saves
+-- Creates a new module in your savedata. It uses the table passed into `data`
+-- for defaults and structure of the save (also returning it for convenience),
+-- then uses it for writing savedata to it and reading savedata from it. Do not
+-- re-define the table, as that'll make a table with a different pointer,
+-- therefore disconnecting it from the module.
+--
+-- ```lua
+-- local counter = savedata.s({
+--   n = 0
+-- })
+--
+-- events:on('init', function()
+--   print(counter.n) --> 0, or something else if the saved data differs from the default
+-- end)
+--
+-- events:on('update', function()
+--   counter.n = counter.n + 1 -- this will be saved the next time savedata.save is called
+-- end)
+-- ```
+--
+-- By default, the name that's used for your module will be path to the Lua file
+-- this function is called from, relative to the modfile root. **This means you
+-- should not rely on the automatic name generation if you're calling this
+-- function twice in the same file, or calling this function via `loadstring` or
+-- similar** as it will create unpredictable module names that will change
+-- between setups or overlap with other module names.
+-- 
+-- You can pass in any string you like to `name`, as long as it's unique in your
+-- project, to override this behavior.
 ---@generic T: table
 ---@param data T
 ---@param name? string @ defaults to the filepath of the file where this function is called
@@ -81,6 +109,8 @@ local function replaceFromRoot(tab1, tab2)
   end
 end
 
+-- Loads the savedata. _Shouldn't be called manually; this is automatically
+-- called on `init()`.
 function self.load()
   assertInitialized()
   --print('loading...')
@@ -105,7 +135,13 @@ end
 
 self.events = EventHandler.new()
 
----@param instant boolean | nil
+-- Saves the savedata onto the user's profile. It waits a single tick to do so
+-- and sets the boolean `saveNextFrame` to `true`; this is so that your game can
+-- display a loading frame for the temporary lagspike, as chances are, on
+-- lower-end setups with hard drives or exceptionally large profiles, this will
+-- momentarily freeze the game as it writes the profile. You can make it
+-- instantly save with `instant`.
+---@param instant? boolean
 function self.save(instant)
   assertInitialized()
   local profile = PROFILEMAN:GetMachineProfile():GetSaved()
@@ -130,6 +166,9 @@ events:on('update', function()
   end
 end)
 
+-- Gets the last save time that persists between game restarts in the format
+-- `{hour, minute, date, month, year}`. If the game has not saved once, returns
+-- `nil`.
 function self.getLastSave()
   assertInitialized()
   if savedata._lastSave and savedata._lastSave[1] == 0 and savedata._lastSave[2] == 0 and savedata._lastSave[3] == 0 and savedata._lastSave[4] == 0 and savedata._lastSave[5] == 0 then
@@ -146,6 +185,9 @@ events:on('init', function()
   end
 end)
 
+-- Enables autosave via the `exit` event. Should hopefully mean data should
+-- never get lost, but the event is pretty patchy due to engine limitations, so
+-- this is wishful thinking at best.
 function self.enableAutosave()
   assertInitialized()
   events:on('exit', function()

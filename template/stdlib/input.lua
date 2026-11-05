@@ -76,11 +76,11 @@ events:on('init', function()
       local key = key
       _main:addcommand('StepP' .. pn .. key .. 'PressMessage', function()
         self.events:call('press', key, pn)
-        self.inputs[pn][key] = true
+        inputs[pn][key] = true
       end)
       _main:addcommand('StepP' .. pn .. key .. 'LiftMessage', function()
         self.events:call('release', key, pn)
-        self.inputs[pn][key] = false
+        inputs[pn][key] = false
       end)
     end
   end

@@ -3,9 +3,9 @@ require 'stdlib.ease'
 ---@class Tick
 ---@field time number
 ---@field locked boolean
----@field private funcs { time: number, func: fun(time: number), funcArgs: any[] }[] @one-time events
----@field private perframes { time: number, dur: number, func: fun(a: number) }[] @recurring, temporary events
----@field private perframesActive { time: number, dur: number, func: fun(a: number) }[]
+---@field private funcs { time: number, func: function, funcArgs: any[] }[] @one-time events
+---@field private perframes { time: number, dur: number, func: fun(time: number, a: number) }[] @recurring, temporary events
+---@field private perframesActive { time: number, dur: number, func: fun(time: number, a: number) }[]
 ---@field private eases { time: number, dur: number, ease: (fun(a: number): number), from: number, to: number, func: fun(a: number) }[] @recurring events with a value and easing function
 ---@field private easesActive { time: number, dur: number, ease: (fun(a: number): number), from: number, to: number, func: fun(a: number) }[]
 ---@field private auxEases { time: number, dur: number, ease: (fun(a: number): number), aux: Aux, value: number, add: boolean, transient: boolean }[] @mirin-like easing events, used with :aux()
@@ -37,6 +37,9 @@ local function insertSorted(tab, value)
   table.insert(tab, value)
 end
 
+-- Updates the instance, processing whatever functions need to called. You can
+-- technically use any unit as the deltatime, like beats or frames; but your
+-- scheduled functions will then use those same units aswell.
 function Tick:update(dt)
   self.time = self.time + dt
 
@@ -65,7 +68,7 @@ function Tick:update(dt)
   for i = 1, #self.perframesActive do
     local f = self.perframesActive[i]
     if f and self.time < (f.time + f.dur) then
-      f.func(self.time)
+      f.func(self.time, (self.time - f.time) / f.dur)
     else
       table.remove(self.perframesActive, i)
       i = i - 1
@@ -150,6 +153,9 @@ function Tick:update(dt)
   end
 end
 
+-- Schedules a function to be called in `delay`. Any extra arguments passed will
+-- be passed to the function. If `delay` is 0 or negative, this call will be
+-- delayed by a frame.
 ---@param delay number
 ---@param func fun(time: number)
 function Tick:func(delay, func, ...)
@@ -161,6 +167,10 @@ function Tick:func(delay, func, ...)
   })
 end
 
+-- Schedules a function to be repeatedly called every frame in `delay` for
+-- `dur`. The current internally stored time of the `Tick` instance will be
+-- passed into the function, alongside with the "progress" of the perframe
+-- (`time since start` / `dur`).
 ---@param delay number
 ---@param dur number
 ---@param func fun(time: number)
@@ -173,6 +183,17 @@ function Tick:perframe(delay, dur, func)
   })
 end
 
+-- Schedules a function to be repeatedly called every frame in `delay` for
+-- `dur`, easing some value from `from` to `to` with the easing function `ease`.
+-- The eased value will be passed into the function.
+-- 
+-- The easing function is some function that takes in `a` from 0.0 to 1.0 and
+-- outputs some `b` from 0.0 to 1.0. An easing function that returns `b=0` for
+-- an input of `a>=1` is called "transient". The [`ease`](#ease) module has
+-- several of these ready for use.
+-- 
+-- The function is guaranteed to be called once at the end of its lifecycle with
+-- 1.0, or 0.0 if the easing function is transient.
 ---@param delay number
 ---@param dur number
 ---@param ease fun(a: number): number
@@ -191,6 +212,8 @@ function Tick:ease(delay, dur, ease, from, to, func)
   })
 end
 
+-- Creates a new `Tick` instance. You'll need to manually update every instance
+-- in your `update` event callback.
 ---@return Tick
 function Tick.new()
   return setmetatable({
@@ -215,6 +238,8 @@ end
 local Aux = {}
 Aux.__index = Aux
 
+-- Similar to `Tick:ease`, except acting upon this specific value. The `from`
+-- value is assumed to be the current value at the time of execution.
 ---@param delay number
 ---@param duration number
 ---@param ease fun(a: number): number
@@ -232,6 +257,8 @@ function Aux:ease(delay, duration, ease, value)
   })
 end
 
+-- Similar to `Aux:ease`, except adding to the value instead of setting it to a
+-- new value.
 ---@param delay number
 ---@param duration number
 ---@param ease fun(a: number): number
@@ -249,6 +276,9 @@ function Aux:add(delay, duration, ease, value)
   })
 end
 
+-- Creates a new `Aux`, which is an arbitrary easable value, acting in sync with
+-- the parent `Tick`. If you've used a definemod in Mirin, this is something
+-- like that.
 ---@param default? number
 function Tick:aux(default)
   if self.locked then error('this tick instance is locked, no new functions can be scheduled', 2) end
@@ -259,6 +289,9 @@ function Tick:aux(default)
   }, Aux)
 end
 
+-- Locks the `Tick`, preventing any further edits to be made to the scheduled
+-- functions. If `callback` is passed, it will be called once every scheduled
+-- function lapses.
 ---@param callback? fun() @ Callback to call upon finishing
 function Tick:lock(callback)
   if callback then
