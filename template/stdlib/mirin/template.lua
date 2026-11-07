@@ -1551,6 +1551,9 @@ function xero.aftsprite(aft, sprite)
 	sprite:SetTexture(aft:GetTexture())
 end
 
+xero.update_command = update_command
+xero.ready_command = ready_command
+
 -- end UNDOCUMENTED
 
 -- This is the entry point of the template.
@@ -1562,23 +1565,23 @@ function xero.init_command(self)
 	-- Register the commands to the actor
 
 	-- OnCommand is for resolving Name= on all the actors
-	self:addcommand('On', on_command)
+	--self:addcommand('On', on_command)
 
 	-- ReadyCommand is called after OnCommand, and does all of the loading
 	-- at the end of ReadyCommand, the tables are sorted and prepared for UpdateCommand
-	self:addcommand('Ready', ready_command)
+	--self:addcommand('Ready', ready_command)
 
 	-- Update command is called every frame. It is what sets the mod values every frame,
 	-- and reads through everything that's been queued by the user.
 	-- Delay one frame because the escape menu issue
-	self:addcommand('Update', function()
+	--[[self:addcommand('Update', function()
 		self:removecommand('Update')
 		self:addcommand('Update', update_command)
-	end)
+	end)]]
 
 	-- NotITG and OpenITG have a long standing bug where the InitCommand on an actor can run twice in certain cases.
 	-- By removing the command here (at the end of init_command), we prevent it from being run again.
-	self:removecommand('Init')
+	--self:removecommand('Init')
 
 	-- init_command is the only one that was in the xero table, so clean it up
 	xero.init_command = nil

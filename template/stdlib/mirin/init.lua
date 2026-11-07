@@ -17,6 +17,18 @@ require('stdlib.mirin.sort')
 require('stdlib.mirin.ease')
 require('stdlib.mirin.template')
 
+local delay = true
 events:on('init', function()
   xero.init_command(xeroActorsAF)
+
+  events:on('update', function()
+    if delay then
+    	delay = false
+    	return
+    end
+    xero.update_command(xeroActorsAF)
+  end)
+end)
+events:on('ready', function()
+  xero.ready_command(xeroActorsAF)
 end)
